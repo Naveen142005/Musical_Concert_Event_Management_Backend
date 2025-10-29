@@ -1,9 +1,11 @@
 import uuid
 from sqlalchemy import UUID, Column, Integer, String
 from app.database.connection import Base
-
+from sqlalchemy.orm import relationship
 class Role(Base):
     __tablename__ = "role"
     
-    role_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
+
+    user = relationship('User', back_populates='role')

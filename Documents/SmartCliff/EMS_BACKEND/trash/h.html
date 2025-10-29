@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Musical Concert Management System - Database Design Document</title>
+    <style>
+        @page {
+            margin: 2cm;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            line-height: 1.6;
+            color: #000;
+            background: #fff;
+            padding: 40px;
+            max-width: 210mm;
+            margin: 0 auto;
+        }
+        
+        .title-page {
+            text-align: center;
+            margin-top: 200px;
+            page-break-after: always;
+        }
+        
+        .title-page h1 {
+            font-size: 28px;
+            margin-bottom: 30px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .title-page h2 {
+            font-size: 22px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .title-page p {
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        
+        h1 {
+            font-size: 20px;
+            margin: 30px 0 15px 0;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        h2 {
+            font-size: 18px;
+            margin: 25px 0 12px 0;
+            font-weight: bold;
+        }
+        
+        h3 {
+            font-size: 16px;
+            margin: 20px 0 10px 0;
+            font-weight: bold;
+        }
+        
+        p {
+            margin-bottom: 12px;
+            text-align: justify;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            page-break-inside: avoid;
+        }
+        
+        table, th, td {
+            border: 1px solid #000;
+        }
+        
+        th {
+            background-color: #fff;
+            padding: 8px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        td {
+            padding: 8px;
+            font-size: 11px;
+        }
+        
+        .entity-description {
+            margin: 20px 0;
+        }
+        
+        .relationship-section {
+            margin: 15px 0;
+        }
+        
+        ul {
+            margin-left: 40px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .section {
+            page-break-inside: avoid;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+            }
+            
+            .page-break {
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- TITLE PAGE -->
+    <div class="title-page">
+        <h1>Musical Concert Management System</h1>
+        <h2>Database Design Document</h2>
+        <p style="margin-top: 50px;">Version 1.0</p>
+        <p>October 2025</p>
+    </div>
+
+    <!-- INTRODUCTION -->
+    <div class="section">
+        <h1>1. Introduction</h1>
+        <p>The Musical Concert Management System is a comprehensive database solution designed to manage all aspects of musical concert operations. The system facilitates efficient management of events, venues, bands, ticket sales, bookings, payments, and user interactions. This database design document provides a detailed overview of the system's data structure, entity relationships, and constraints that ensure data integrity and support business operations.</p>
+        <p>The database is designed to support multiple stakeholders including event organizers, venue managers, band members, customers, and system administrators. It enables seamless coordination between different entities involved in concert management, from initial event planning to post-event feedback collection.</p>
+    </div>
+
+    <!-- ENTITY DESCRIPTIONS -->
+    <div class="section">
+        <h1>2. Entity Descriptions</h1>
+        
+        <h3>2.1 Events</h3>
+        <p>Represents musical concerts and performances. Each event has details about the concert including name, banner image, description, slot timings, ticket availability status, creation date, and payment information.</p>
+        
+        <h3>2.2 Venue</h3>
+        <p>Contains information about concert locations including venue name, physical location, seating capacity, pricing structure, and operational status.</p>
+        
+        <h3>2.3 Bands</h3>
+        <p>Stores information about musical bands performing at events, including band name, genre, capacity information, member count, current status, and pricing details.</p>
+        
+        <h3>2.4 User</h3>
+        <p>Represents system users including event organizers, customers, and administrators. Contains authentication credentials and basic profile information.</p>
+        
+        <h3>2.5 User_Details</h3>
+        <p>Extended user profile information including gender, date of birth, location details, country, and profile image.</p>
+        
+        <h3>2.6 Tickets</h3>
+        <p>Manages ticket inventory for events including ticket types, pricing, available quantities, and associated event information.</p>
+        
+        <h3>2.7 Bookings</h3>
+        <p>Records customer ticket purchases including booking date, number of tickets, total amount, and booking status.</p>
+        
+        <h3>2.8 Bookings_details</h3>
+        <p>Detailed breakdown of bookings showing specific ticket types and quantities purchased.</p>
+        
+        <h3>2.9 Payments</h3>
+        <p>Tracks payment transactions for bookings including payment method, date, and current status.</p>
+        
+        <h3>2.10 payment_details</h3>
+        <p>Stores detailed payment information associated with specific bookings and users.</p>
+        
+        <h3>2.11 payment(audience)</h3>
+        <p>Records payments made by audiences to organizers for event bookings.</p>
+        
+        <h3>2.12 payment(organizer)</h3>
+        <p>Manages payments from organizers to various service providers and vendors.</p>
+        
+        <h3>2.13 refund</h3>
+        <p>Handles refund requests and processing including refund reason, amount, date, and status.</p>
+        
+        <h3>2.14 feedback</h3>
+        <p>Collects user feedback and reviews for events including ratings, comments, and submission dates.</p>
+        
+        <h3>2.15 Queries</h3>
+        <p>Manages user inquiries and support requests with priority levels and status tracking.</p>
+        
+        <h3>2.16 Role</h3>
+        <p>Defines system roles for access control and permission management.</p>
+        
+        <h3>2.17 booked_snacks</h3>
+        <p>Manages snack and refreshment bookings for events including items ordered and pricing.</p>
+        
+        <h3>2.18 snacks</h3>
+        <p>Catalog of available snacks and refreshments with pricing information.</p>
+        
+        <h3>2.19 Decorations</h3>
+        <p>Lists available decoration options for events including types, pricing, and availability status.</p>
+        
+        <h3>2.20 event_status_history</h3>
+        <p>Maintains historical records of event status changes for audit and tracking purposes.</p>
+        
+        <h3>2.21 facilities_selected</h3>
+        <p>Tracks selection of various facilities including venues, bands, decorations, and booked snacks for events.</p>
+        
+        <h3>2.22 recent_activity</h3>
+        <p>Logs recent user activities and actions within the system for monitoring and analytics.</p>
+    </div>
+
+    <!-- ATTRIBUTES OF ENTITIES -->
+    <div class="section page-break">
+        <h1>3. Attributes of Entities</h1>
+        
+        <h3>3.1 Events</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>COLUMN NAME</th>
+                    <th>DATA TYPE</th>
+                    <th>SIZE</th>
+                    <th>CONSTRAINTS</th>
+                    <th>DESCRIPTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>PK, AUTO_INCREMENT</td>
+                    <td>Unique event identifier</td>
+                </tr>
+                <tr>
+                    <td>user_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>FK, NOT NULL</td>
+                    <td>Reference to event organizer</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>VARCHAR</td>
+                    <td>(200)</td>
+                    <td>NOT NULL</td>
+                    <td>Event name</td>
+                </tr>
+                <tr>
+                    <td>banner</td>
+                    <td>BLOB</td>
+                    <td>-</td>
+                    <td>NULL</td>
+                    <td>Event banner image</td>
+                </tr>
+                <tr>
+                    <td>description</td>
+                    <td>TEXT</td>
+                    <td>-</td>
+                    <td>NOT NULL</td>
+                    <td>Event description</td>
+                </tr>
+                <tr>
+                    <td>slot</td>
+                    <td>VARCHAR</td>
+                    <td>(100)</td>
+                    <td>NOT NULL</td>
+                    <td>Event time slot</td>
+                </tr>
+                <tr>
+                    <td>ticket_unsold</td>
+                    <td>BOOLEAN</td>
+                    <td>-</td>
+                    <td>DEFAULT FALSE</td>
+                    <td>Ticket availability status</td>
+                </tr>
+                <tr>
+                    <td>status</td>
+                    <td>VARCHAR</td>
+                    <td>(50)</td>
+                    <td>NOT NULL</td>
+                    <td>Event status</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>DATE</td>
+                    <td>-</td>
+                    <td>NOT NULL</td>
+                    <td>Event creation date</td>
+                </tr>
+                <tr>
+                    <td>payment_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>FK, NULL</td>
+                    <td>Associated payment reference</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.2 Venue</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>COLUMN NAME</th>
+                    <th>DATA TYPE</th>
+                    <th>SIZE</th>
+                    <th>CONSTRAINTS</th>
+                    <th>DESCRIPTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>PK, AUTO_INCREMENT</td>
+                    <td>Unique venue identifier</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>VARCHAR</td>
+                    <td>(200)</td>
+                    <td>NOT NULL</td>
+                    <td>Venue name</td>
+                </tr>
+                <tr>
+                    <td>location</td>
+                    <td>VARCHAR</td>
+                    <td>(255)</td>
+                    <td>NOT NULL</td>
+                    <td>Venue address</td>
+                </tr>
+                <tr>
+                    <td>capacity</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>NOT NULL</td>
+                    <td>Seating capacity</td>
+                </tr>
+                <tr>
+                    <td>price</td>
+                    <td>DECIMAL</td>
+                    <td>(10,2)</td>
+                    <td>NOT NULL</td>
+                    <td>Venue rental price</td>
+                </tr>
+                <tr>
+                    <td>status</td>
+                    <td>VARCHAR</td>
+                    <td>(50)</td>
+                    <td>NOT NULL</td>
+                    <td>Venue availability status</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.3 Bands</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>COLUMN NAME</th>
+                    <th>DATA TYPE</th>
+                    <th>SIZE</th>
+                    <th>CONSTRAINTS</th>
+                    <th>DESCRIPTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>PK, AUTO_INCREMENT</td>
+                    <td>Unique band identifier</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>VARCHAR</td>
+                    <td>(200)</td>
+                    <td>NOT NULL</td>
+                    <td>Band name</td>
+                </tr>
+                <tr>
+                    <td>genre</td>
+                    <td>VARCHAR</td>
+                    <td>(100)</td>
+                    <td>NOT NULL</td>
+                    <td>Music genre</td>
+                </tr>
+                <tr>
+                    <td>capacity</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>NULL</td>
+                    <td>Band capacity</td>
+                </tr>
+                <tr>
+                    <td>member_count</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>NOT NULL</td>
+                    <td>Number of band members</td>
+                </tr>
+                <tr>
+                    <td>status</td>
+                    <td>VARCHAR</td>
+                    <td>(50)</td>
+                    <td>NOT NULL</td>
+                    <td>Band availability status</td>
+                </tr>
+                <tr>
+                    <td>price</td>
+                    <td>DECIMAL</td>
+                    <td>(10,2)</td>
+                    <td>NOT NULL</td>
+                    <td>Band booking price</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.4 User</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>COLUMN NAME</th>
+                    <th>DATA TYPE</th>
+                    <th>SIZE</th>
+                    <th>CONSTRAINTS</th>
+                    <th>DESCRIPTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>user_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>PK, AUTO_INCREMENT</td>
+                    <td>Unique user identifier</td>
+                </tr>
+                <tr>
+                    <td>role_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>FK, NOT NULL</td>
+                    <td>User role reference</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>VARCHAR</td>
+                    <td>(200)</td>
+                    <td>NOT NULL</td>
+                    <td>User full name</td>
+                </tr>
+                <tr>
+                    <td>email</td>
+                    <td>VARCHAR</td>
+                    <td>(255)</td>
+                    <td>UNIQUE, NOT NULL</td>
+                    <td>User email address</td>
+                </tr>
+                <tr>
+                    <td>phone</td>
+                    <td>VARCHAR</td>
+                    <td>(20)</td>
+                    <td>NOT NULL</td>
+                    <td>Contact number</td>
+                </tr>
+                <tr>
+                    <td>password</td>
+                    <td>VARCHAR</td>
+                    <td>(255)</td>
+                    <td>NOT NULL</td>
+                    <td>Encrypted password</td>
+                </tr>
+                <tr>
+                    <td>c_relation_id</td>
+                    <td>DATE</td>
+                    <td>-</td>
+                    <td>NULL</td>
+                    <td>Account creation date</td>
+                </tr>
+                <tr>
+                    <td>status</td>
+                    <td>BOOLEAN</td>
+                    <td>-</td>
+                    <td>DEFAULT TRUE</td>
+                    <td>Account active status</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.5 User_Details</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>COLUMN NAME</th>
+                    <th>DATA TYPE</th>
+                    <th>SIZE</th>
+                    <th>CONSTRAINTS</th>
+                    <th>DESCRIPTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>user_details_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>PK, AUTO_INCREMENT</td>
+                    <td>Unique user details identifier</td>
+                </tr>
+                <tr>
+                    <td>user_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>FK, NOT NULL</td>
+                    <td>Reference to user</td>
+                </tr>
+                <tr>
+                    <td>gender</td>
+                    <td>VARCHAR</td>
+                    <td>(10)</td>
+                    <td>NULL</td>
+                    <td>User gender</td>
+                </tr>
+                <tr>
+                    <td>dob</td>
+                    <td>DATE</td>
+                    <td>-</td>
+                    <td>NULL</td>
+                    <td>Date of birth</td>
+                </tr>
+                <tr>
+                    <td>city</td>
+                    <td>VARCHAR</td>
+                    <td>(100)</td>
+                    <td>NULL</td>
+                    <td>City name</td>
+                </tr>
+                <tr>
+                    <td>state</td>
+                    <td>VARCHAR</td>
+                    <td>(100)</td>
+                    <td>NULL</td>
+                    <td>State name</td>
+                </tr>
+                <tr>
+                    <td>country</td>
+                    <td>VARCHAR</td>
+                    <td>(100)</td>
+                    <td>NULL</td>
+                    <td>Country name</td>
+                </tr>
+                <tr>
+                    <td>profile_image</td>
+                    <td>BLOB</td>
+                    <td>-</td>
+                    <td>NULL</td>
+                    <td>User profile picture</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.6 Tickets</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>COLUMN NAME</th>
+                    <th>DATA TYPE</th>
+                    <th>SIZE</th>
+                    <th>CONSTRAINTS</th>
+                    <th>DESCRIPTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>ticket_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>PK, AUTO_INCREMENT</td>
+                    <td>Unique ticket identifier</td>
+                </tr>
+                <tr>
+                    <td>event_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>FK, NOT NULL</td>
+                    <td>Reference to event</td>
+                </tr>
+                <tr>
+                    <td>payment_details_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>FK, NOT NULL</td>
+                    <td>Reference to payment details</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.13 refund</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>COLUMN NAME</th>
+                    <th>DATA TYPE</th>
+                    <th>SIZE</th>
+                    <th>CONSTRAINTS</th>
+                    <th>DESCRIPTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>refund_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>PK, AUTO_INCREMENT</td>
+                    <td>Unique refund identifier</td>
+                </tr>
+                <tr>
+                    <td>payment_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>FK, NOT NULL</td>
+                    <td>Reference to payment</td>
+                </tr>
+                <tr>
+                    <td>refund_reason</td>
+                    <td>TEXT</td>
+                    <td>-</td>
+                    <td>NOT NULL</td>
+                    <td>Reason for refund request</td>
+                </tr>
+                <tr>
+                    <td>refund_amount</td>
+                    <td>DECIMAL</td>
+                    <td>(10,2)</td>
+                    <td>NOT NULL</td>
+                    <td>Amount to be refunded</td>
+                </tr>
+                <tr>
+                    <td>refund_date</td>
+                    <td>DATE</td>
+                    <td>-</td>
+                    <td>NOT NULL</td>
+                    <td>Refund processing date</td>
+                </tr>
+                <tr>
+                    <td>status</td>
+                    <td>VARCHAR</td>
+                    <td>(50)</td>
+                    <td>NOT NULL</td>
+                    <td>Refund status</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.14 feedback</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>COLUMN NAME</th>
+                    <th>DATA TYPE</th>
+                    <th>SIZE</th>
+                    <th>CONSTRAINTS</th>
+                    <th>DESCRIPTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>feedback_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>PK, AUTO_INCREMENT</td>
+                    <td>Unique feedback identifier</td>
+                </tr>
+                <tr>
+                    <td>event_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>FK, NOT NULL</td>
+                    <td>Reference to event</td>
+                </tr>
+                <tr>
+                    <td>feedback_rating</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>NOT NULL</td>
+                    <td>Rating value</td>
+                </tr>
+                <tr>
+                    <td>feedback_summary</td>
+                    <td>VARCHAR</td>
+                    <td>(500)</td>
+                    <td>NULL</td>
+                    <td>Brief feedback summary</td>
+                </tr>
+                <tr>
+                    <td>feedback_date</td>
+                    <td>DATE</td>
+                    <td>-</td>
+                    <td>NOT NULL</td>
+                    <td>Feedback submission date</td>
+                </tr>
+                <tr>
+                    <td>status</td>
+                    <td>VARCHAR</td>
+                    <td>(50)</td>
+                    <td>NOT NULL</td>
+                    <td>Feedback status</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.15 Queries</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>COLUMN NAME</th>
+                    <th>DATA TYPE</th>
+                    <th>SIZE</th>
+                    <th>CONSTRAINTS</th>
+                    <th>DESCRIPTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>query_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>PK, AUTO_INCREMENT</td>
+                    <td>Unique query identifier</td>
+                </tr>
+                <tr>
+                    <td>user_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>FK, NOT NULL</td>
+                    <td>Reference to user</td>
+                </tr>
+                <tr>
+                    <td>query_summary</td>
+                    <td>VARCHAR</td>
+                    <td>(500)</td>
+                    <td>NOT NULL</td>
+                    <td>Query summary</td>
+                </tr>
+                <tr>
+                    <td>query_priority</td>
+                    <td>VARCHAR</td>
+                    <td>(20)</td>
+                    <td>NOT NULL</td>
+                    <td>Priority level</td>
+                </tr>
+                <tr>
+                    <td>query_date</td>
+                    <td>DATE</td>
+                    <td>-</td>
+                    <td>NOT NULL</td>
+                    <td>Query submission date</td>
+                </tr>
+                <tr>
+                    <td>status</td>
+                    <td>VARCHAR</td>
+                    <td>(50)</td>
+                    <td>NOT NULL</td>
+                    <td>Query status</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.16 Role</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>COLUMN NAME</th>
+                    <th>DATA TYPE</th>
+                    <th>SIZE</th>
+                    <th>CONSTRAINTS</th>
+                    <th>DESCRIPTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>role_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>PK, AUTO_INCREMENT</td>
+                    <td>Unique role identifier</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>VARCHAR</td>
+                    <td>(100)</td>
+                    <td>UNIQUE, NOT NULL</td>
+                    <td>Role name</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.17 booked_snacks</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>COLUMN NAME</th>
+                    <th>DATA TYPE</th>
+                    <th>SIZE</th>
+                    <th>CONSTRAINTS</th>
+                    <th>DESCRIPTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>booked_snacks_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>PK, AUTO_INCREMENT</td>
+                    <td>Unique booked snacks identifier</td>
+                </tr>
+                <tr>
+                    <td>snacks</td>
+                    <td>ARRAY</td>
+                    <td>-</td>
+                    <td>NOT NULL</td>
+                    <td>List of snacks booked</td>
+                </tr>
+                <tr>
+                    <td>price</td>
+                    <td>DECIMAL</td>
+                    <td>(10,2)</td>
+                    <td>NOT NULL</td>
+                    <td>Total snacks price</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.18 snacks</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>COLUMN NAME</th>
+                    <th>DATA TYPE</th>
+                    <th>SIZE</th>
+                    <th>CONSTRAINTS</th>
+                    <th>DESCRIPTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>snacks_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>PK, AUTO_INCREMENT</td>
+                    <td>Unique snack identifier</td>
+                </tr>
+                <tr>
+                    <td>price</td>
+                    <td>DECIMAL</td>
+                    <td>(10,2)</td>
+                    <td>NOT NULL</td>
+                    <td>Snack item price</td>
+                </tr>
+                <tr>
+                    <td>snacks</td>
+                    <td>ARRAY</td>
+                    <td>-</td>
+                    <td>NOT NULL</td>
+                    <td>Available snack items</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.19 Decorations</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>COLUMN NAME</th>
+                    <th>DATA TYPE</th>
+                    <th>SIZE</th>
+                    <th>CONSTRAINTS</th>
+                    <th>DESCRIPTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>PK, AUTO_INCREMENT</td>
+                    <td>Unique decoration identifier</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>VARCHAR</td>
+                    <td>(200)</td>
+                    <td>NOT NULL</td>
+                    <td>Decoration name</td>
+                </tr>
+                <tr>
+                    <td>type</td>
+                    <td>VARCHAR</td>
+                    <td>(100)</td>
+                    <td>NOT NULL</td>
+                    <td>Decoration type</td>
+                </tr>
+                <tr>
+                    <td>price</td>
+                    <td>DECIMAL</td>
+                    <td>(10,2)</td>
+                    <td>NOT NULL</td>
+                    <td>Decoration price</td>
+                </tr>
+                <tr>
+                    <td>status</td>
+                    <td>VARCHAR</td>
+                    <td>(50)</td>
+                    <td>NOT NULL</td>
+                    <td>Decoration availability status</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.20 event_status_history</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>COLUMN NAME</th>
+                    <th>DATA TYPE</th>
+                    <th>SIZE</th>
+                    <th>CONSTRAINTS</th>
+                    <th>DESCRIPTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>PK, AUTO_INCREMENT</td>
+                    <td>Unique history identifier</td>
+                </tr>
+                <tr>
+                    <td>event_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>FK, NOT NULL</td>
+                    <td>Reference to event</td>
+                </tr>
+                <tr>
+                    <td>date</td>
+                    <td>DATE</td>
+                    <td>-</td>
+                    <td>NOT NULL</td>
+                    <td>Status change date</td>
+                </tr>
+                <tr>
+                    <td>status</td>
+                    <td>VARCHAR</td>
+                    <td>(50)</td>
+                    <td>NOT NULL</td>
+                    <td>Event status at that time</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.21 facilities_selected</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>COLUMN NAME</th>
+                    <th>DATA TYPE</th>
+                    <th>SIZE</th>
+                    <th>CONSTRAINTS</th>
+                    <th>DESCRIPTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>facilities_selected</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>PK, AUTO_INCREMENT</td>
+                    <td>Unique facility selection identifier</td>
+                </tr>
+                <tr>
+                    <td>event_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>FK, NOT NULL</td>
+                    <td>Reference to event</td>
+                </tr>
+                <tr>
+                    <td>venue_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>FK, NULL</td>
+                    <td>Selected venue reference</td>
+                </tr>
+                <tr>
+                    <td>band_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>FK, NULL</td>
+                    <td>Selected band reference</td>
+                </tr>
+                <tr>
+                    <td>decor_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>FK, NULL</td>
+                    <td>Selected decoration reference</td>
+                </tr>
+                <tr>
+                    <td>booked_snacks_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>FK, NULL</td>
+                    <td>Booked snacks reference</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.22 recent_activity</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>COLUMN NAME</th>
+                    <th>DATA TYPE</th>
+                    <th>SIZE</th>
+                    <th>CONSTRAINTS</th>
+                    <th>DESCRIPTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>recent_activity_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>PK, AUTO_INCREMENT</td>
+                    <td>Unique activity identifier</td>
+                </tr>
+                <tr>
+                    <td>activity_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>NOT NULL</td>
+                    <td>Activity type identifier</td>
+                </tr>
+                <tr>
+                    <td>ended_date</td>
+                    <td>DATE</td>
+                    <td>-</td>
+                    <td>NOT NULL</td>
+                    <td>Activity completion date</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- RELATIONSHIPS BETWEEN ENTITIES -->
+    <div class="section page-break">
+        <h1>4. Relationships Between Entities</h1>
+        
+        <h3>4.1 One-to-Many Relationships</h3>
+        
+        <p><strong>User to Events:</strong> One user (organizer) can create and manage multiple events. Each event belongs to one user. This relationship is implemented through the user_id foreign key in the Events table.</p>
+        
+        <p><strong>User to Bookings:</strong> One user can make multiple bookings for different events. Each booking is associated with one user. The user_id in the Bookings table establishes this relationship.</p>
+        
+        <p><strong>User to Queries:</strong> One user can submit multiple queries or support requests. Each query belongs to one user through the user_id foreign key in the Queries table.</p>
+        
+        <p><strong>User to User_Details:</strong> Each user has one detailed profile record. This one-to-one relationship is maintained through user_id in the User_Details table.</p>
+        
+        <p><strong>Role to User:</strong> One role can be assigned to multiple users. Each user has one role. The role_id in the User table implements this relationship.</p>
+        
+        <p><strong>Events to Tickets:</strong> One event can have multiple ticket types with different pricing. Each ticket type belongs to one event through the event_id foreign key.</p>
+        
+        <p><strong>Events to Bookings:</strong> One event can have multiple bookings from different customers. Each booking is for one specific event, established by event_id in Bookings.</p>
+        
+        <p><strong>Events to Feedback:</strong> One event can receive multiple feedback entries from different attendees. Each feedback entry relates to one event through event_id.</p>
+        
+        <p><strong>Events to event_status_history:</strong> One event can have multiple status change records tracking its lifecycle. Each history entry belongs to one event.</p>
+        
+        <p><strong>Events to facilities_selected:</strong> One event can have one set of selected facilities. This relationship links the event to its chosen venue, band, decorations, and snacks.</p>
+        
+        <p><strong>Bookings to Bookings_details:</strong> One booking can contain multiple ticket types with different quantities. Each booking detail record belongs to one booking through booking_id.</p>
+        
+        <p><strong>Bookings to Payments:</strong> One booking is associated with one payment transaction. The booking_id in the Payments table establishes this relationship.</p>
+        
+        <p><strong>Payments to refund:</strong> One payment can have one refund request if cancellation occurs. The payment_id in the refund table links to the original payment.</p>
+        
+        <p><strong>User to payment_details:</strong> One user can have multiple payment detail records for different transactions. Each payment detail belongs to one user.</p>
+
+        <h3>4.2 Many-to-Many Relationships</h3>
+        
+        <p><strong>Events and Venues (through facilities_selected):</strong> Multiple events can be held at multiple venues over time. The facilities_selected table serves as a junction table with venue_id and event_id.</p>
+        
+        <p><strong>Events and Bands (through facilities_selected):</strong> Multiple events can feature multiple bands, and bands can perform at multiple events. The facilities_selected table links events to bands.</p>
+        
+        <p><strong>Events and Decorations (through facilities_selected):</strong> Multiple events can use multiple decoration setups. The facilities_selected table manages this relationship through decor_id and event_id.</p>
+        
+        <p><strong>Events and Snacks (through facilities_selected and booked_snacks):</strong> Multiple events can order multiple snack combinations. The facilities_selected table links to booked_snacks, which contains the snack items.</p>
+
+        <h3>4.3 Additional Relationships</h3>
+        
+        <p><strong>payment_details to payment(audience):</strong> Payment details are linked to audience payments through payment_details_id, tracking payments from customers to organizers.</p>
+        
+        <p><strong>payment_details to payment(organizer):</strong> Payment details are linked to organizer payments through payment_details_id, tracking payments from organizers to service providers.</p>
+        
+        <p><strong>Events to payment(audience):</strong> Events are linked to audience payments, showing which payments were made for specific events.</p>
+        
+        <p><strong>Events to payment(organizer):</strong> Events are linked to organizer payments, tracking payments made by event organizers for facilities and services.</p>
+    </div>
+
+    <!-- PRIMARY AND FOREIGN KEYS -->
+    <div class="section">
+        <h1>5. Primary and Foreign Keys</h1>
+        
+        <h3>5.1 Primary Keys</h3>
+        <ul>
+            <li><strong>Events:</strong> id (Primary Key, Auto-increment)</li>
+            <li><strong>Venue:</strong> id (Primary Key, Auto-increment)</li>
+            <li><strong>Bands:</strong> id (Primary Key, Auto-increment)</li>
+            <li><strong>User:</strong> user_id (Primary Key, Auto-increment)</li>
+            <li><strong>User_Details:</strong> user_details_id (Primary Key, Auto-increment)</li>
+            <li><strong>Tickets:</strong> ticket_id (Primary Key, Auto-increment)</li>
+            <li><strong>Bookings:</strong> booking_id (Primary Key, Auto-increment)</li>
+            <li><strong>Bookings_details:</strong> booking_details_id (Primary Key, Auto-increment)</li>
+            <li><strong>Payments:</strong> payment_id (Primary Key, Auto-increment)</li>
+            <li><strong>payment_details:</strong> payment_details_id (Primary Key, Auto-increment)</li>
+            <li><strong>payment(audience):</strong> payment_id (Primary Key, Auto-increment)</li>
+            <li><strong>payment(organizer):</strong> payment_id (Primary Key, Auto-increment)</li>
+            <li><strong>refund:</strong> refund_id (Primary Key, Auto-increment)</li>
+            <li><strong>feedback:</strong> feedback_id (Primary Key, Auto-increment)</li>
+            <li><strong>Queries:</strong> query_id (Primary Key, Auto-increment)</li>
+            <li><strong>Role:</strong> role_id (Primary Key, Auto-increment)</li>
+            <li><strong>booked_snacks:</strong> booked_snacks_id (Primary Key, Auto-increment)</li>
+            <li><strong>snacks:</strong> snacks_id (Primary Key, Auto-increment)</li>
+            <li><strong>Decorations:</strong> id (Primary Key, Auto-increment)</li>
+            <li><strong>event_status_history:</strong> id (Primary Key, Auto-increment)</li>
+            <li><strong>facilities_selected:</strong> facilities_selected (Primary Key, Auto-increment)</li>
+            <li><strong>recent_activity:</strong> recent_activity_id (Primary Key, Auto-increment)</li>
+        </ul>
+
+        <h3>5.2 Foreign Key Constraints</h3>
+        <ul>
+            <li><strong>Events.user_id</strong> references User.user_id - Links events to their organizers</li>
+            <li><strong>Events.payment_id</strong> references payment(organizer).payment_id - Links events to organizer payments</li>
+            <li><strong>User.role_id</strong> references Role.role_id - Assigns roles to users</li>
+            <li><strong>User_Details.user_id</strong> references User.user_id - Links detailed profiles to users</li>
+            <li><strong>Tickets.event_id</strong> references Events.id - Associates tickets with events</li>
+            <li><strong>Bookings.user_id</strong> references User.user_id - Links bookings to customers</li>
+            <li><strong>Bookings.event_id</strong> references Events.id - Associates bookings with events</li>
+            <li><strong>Bookings_details.booking_id</strong> references Bookings.booking_id - Links booking details to bookings</li>
+            <li><strong>Payments.booking_id</strong> references Bookings.booking_id - Associates payments with bookings</li>
+            <li><strong>payment_details.user_id</strong> references User.user_id - Links payment details to users</li>
+            <li><strong>payment(audience).event_id</strong> references Events.id - Links audience payments to events</li>
+            <li><strong>payment(audience).payment_details_id</strong> references payment_details.payment_details_id</li>
+            <li><strong>payment(organizer).event_id</strong> references Events.id - Links organizer payments to events</li>
+            <li><strong>payment(organizer).payment_details_id</strong> references payment_details.payment_details_id</li>
+            <li><strong>refund.payment_id</strong> references Payments.payment_id - Links refunds to original payments</li>
+            <li><strong>feedback.event_id</strong> references Events.id - Associates feedback with events</li>
+            <li><strong>Queries.user_id</strong> references User.user_id - Links queries to users</li>
+            <li><strong>event_status_history.event_id</strong> references Events.id - Tracks event status changes</li>
+            <li><strong>facilities_selected.event_id</strong> references Events.id - Links facility selections to events</li>
+            <li><strong>facilities_selected.venue_id</strong> references Venue.id - Links selected venues</li>
+            <li><strong>facilities_selected.band_id</strong> references Bands.id - Links selected bands</li>
+            <li><strong>facilities_selected.decor_id</strong> references Decorations.id - Links selected decorations</li>
+            <li><strong>facilities_selected.booked_snacks_id</strong> references booked_snacks.booked_snacks_id - Links snack orders</li>
+        </ul>
+    </div>
+
+    <!-- NORMALIZATION -->
+    <div class="section page-break">
+        <h1>6. Normalization</h1>
+        
+        <p>The Musical Concert Management System database is designed following normalization principles up to Third Normal Form (3NF) to eliminate data redundancy and ensure data integrity.</p>
+        
+        <h3>6.1 First Normal Form (1NF)</h3>
+        <p>All tables in the database satisfy 1NF requirements. Each table has a primary key that uniquely identifies each record. All attributes contain atomic values with no repeating groups. For example, the Events table stores one event per row with atomic values for name, description, slot, and status. The booked_snacks table uses an array data type for snacks, which is handled appropriately by the database management system.</p>
+        
+        <h3>6.2 Second Normal Form (2NF)</h3>
+        <p>The database satisfies 2NF as all non-key attributes are fully functionally dependent on the entire primary key. There are no partial dependencies. For instance, in the Bookings_details table, attributes like ticket_type, quantity, and unit_total depend on the complete primary key (booking_details_id) and not on part of it. Similarly, in the facilities_selected table, all facility references depend on the primary key, not on portions of it.</p>
+        
+        <h3>6.3 Third Normal Form (3NF)</h3>
+        <p>The database achieves 3NF by eliminating transitive dependencies. No non-key attribute depends on another non-key attribute. User information is separated into User and User_Details tables to avoid transitive dependencies. Payment information is properly separated into Payments, payment_details, payment(audience), and payment(organizer) tables, ensuring that payment attributes depend only on their respective primary keys. Event status history is maintained in a separate table rather than storing historical data in the Events table. The facilities_selected table serves as a proper junction table, referencing primary keys from related tables rather than storing redundant facility information.</p>
+        
+        <h3>6.4 Benefits of Normalization</h3>
+        <p>The normalized structure provides several benefits including reduced data redundancy as information is stored once and referenced through foreign keys, improved data integrity through proper constraint enforcement, easier database maintenance with changes required in only one location, efficient query performance with properly indexed tables, and scalability with a structure that can accommodate growth without major redesign.</p>
+    </div>
+
+    <!-- CONCLUSION -->
+    <div class="section">
+        <h1>7. Conclusion</h1>
+        
+        <p>The Musical Concert Management System database design provides a comprehensive and robust foundation for managing all aspects of musical concert operations. The design effectively addresses the complex relationships between events, venues, bands, users, bookings, payments, and feedback through a well-structured relational model.</p>
+        
+        <p>Key strengths of this database design include comprehensive event management capabilities that track events from creation through completion with full historical records, flexible user management supporting multiple roles including organizers, customers, and administrators with appropriate access controls, detailed booking and ticketing systems that handle multiple ticket types, quantities, and pricing structures, robust payment processing with separate tracking for audience and organizer payments, complete refund handling, and integrated feedback collection mechanisms for quality improvement.</p>
+        
+        <p>The database design follows industry best practices with normalization up to 3NF, proper use of primary and foreign keys, appropriate data types and constraints, clear separation of concerns across tables, and scalable architecture supporting system growth. The entity relationship structure ensures data integrity through carefully designed foreign key constraints, prevents data anomalies through normalization, supports complex queries through proper table relationships, enables efficient data retrieval with appropriate indexing opportunities, and facilitates future enhancements with flexible design.</p>
+        
+        <p>This database design successfully supports all core business operations of the Musical Concert Management System including event planning and setup, venue and band management, ticket sales and bookings, payment processing and refunds, user authentication and authorization, feedback and quality management, and reporting and analytics. The implementation of this database design will provide a solid foundation for building a reliable, efficient, and scalable Musical Concert Management System.</p>
+    </div>
+
+</body>
+</html>
+                    <td>FK, NOT NULL</td>
+                    <td>Reference to event</td>
+                </tr>
+                <tr>
+                    <td>ticket_type</td>
+                    <td>VARCHAR</td>
+                    <td>(50)</td>
+                    <td>NOT NULL</td>
+                    <td>Type of ticket</td>
+                </tr>
+                <tr>
+                    <td>price</td>
+                    <td>DECIMAL</td>
+                    <td>(10,2)</td>
+                    <td>NOT NULL</td>
+                    <td>Ticket price</td>
+                </tr>
+                <tr>
+                    <td>available_counts</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>NOT NULL</td>
+                    <td>Available ticket quantity</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.7 Bookings</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>COLUMN NAME</th>
+                    <th>DATA TYPE</th>
+                    <th>SIZE</th>
+                    <th>CONSTRAINTS</th>
+                    <th>DESCRIPTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>booking_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>PK, AUTO_INCREMENT</td>
+                    <td>Unique booking identifier</td>
+                </tr>
+                <tr>
+                    <td>user_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>FK, NOT NULL</td>
+                    <td>Reference to customer</td>
+                </tr>
+                <tr>
+                    <td>event_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>FK, NOT NULL</td>
+                    <td>Reference to event</td>
+                </tr>
+                <tr>
+                    <td>booked_date</td>
+                    <td>DATE</td>
+                    <td>-</td>
+                    <td>NOT NULL</td>
+                    <td>Booking date</td>
+                </tr>
+                <tr>
+                    <td>total_tickets</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>NOT NULL</td>
+                    <td>Total tickets booked</td>
+                </tr>
+                <tr>
+                    <td>total_amount</td>
+                    <td>DECIMAL</td>
+                    <td>(10,2)</td>
+                    <td>NOT NULL</td>
+                    <td>Total booking amount</td>
+                </tr>
+                <tr>
+                    <td>status</td>
+                    <td>VARCHAR</td>
+                    <td>(50)</td>
+                    <td>NOT NULL</td>
+                    <td>Booking status</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.8 Bookings_details</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>COLUMN NAME</th>
+                    <th>DATA TYPE</th>
+                    <th>SIZE</th>
+                    <th>CONSTRAINTS</th>
+                    <th>DESCRIPTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>booking_details_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>PK, AUTO_INCREMENT</td>
+                    <td>Unique booking detail identifier</td>
+                </tr>
+                <tr>
+                    <td>booking_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>FK, NOT NULL</td>
+                    <td>Reference to booking</td>
+                </tr>
+                <tr>
+                    <td>ticket_type</td>
+                    <td>VARCHAR</td>
+                    <td>(50)</td>
+                    <td>NOT NULL</td>
+                    <td>Type of ticket booked</td>
+                </tr>
+                <tr>
+                    <td>quantity</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>NOT NULL</td>
+                    <td>Quantity of tickets</td>
+                </tr>
+                <tr>
+                    <td>unit_total</td>
+                    <td>DECIMAL</td>
+                    <td>(10,2)</td>
+                    <td>NOT NULL</td>
+                    <td>Total for this ticket type</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.9 Payments</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>COLUMN NAME</th>
+                    <th>DATA TYPE</th>
+                    <th>SIZE</th>
+                    <th>CONSTRAINTS</th>
+                    <th>DESCRIPTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>payment_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>PK, AUTO_INCREMENT</td>
+                    <td>Unique payment identifier</td>
+                </tr>
+                <tr>
+                    <td>booking_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>FK, NOT NULL</td>
+                    <td>Reference to booking</td>
+                </tr>
+                <tr>
+                    <td>payment_method</td>
+                    <td>VARCHAR</td>
+                    <td>(50)</td>
+                    <td>NOT NULL</td>
+                    <td>Payment method used</td>
+                </tr>
+                <tr>
+                    <td>payment_date</td>
+                    <td>DATE</td>
+                    <td>-</td>
+                    <td>NOT NULL</td>
+                    <td>Payment transaction date</td>
+                </tr>
+                <tr>
+                    <td>status</td>
+                    <td>VARCHAR</td>
+                    <td>(50)</td>
+                    <td>NOT NULL</td>
+                    <td>Payment status</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.10 payment_details</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>COLUMN NAME</th>
+                    <th>DATA TYPE</th>
+                    <th>SIZE</th>
+                    <th>CONSTRAINTS</th>
+                    <th>DESCRIPTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>payment_details_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>PK, AUTO_INCREMENT</td>
+                    <td>Unique payment detail identifier</td>
+                </tr>
+                <tr>
+                    <td>user_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>FK, NOT NULL</td>
+                    <td>Reference to user</td>
+                </tr>
+                <tr>
+                    <td>payment_method</td>
+                    <td>VARCHAR</td>
+                    <td>(50)</td>
+                    <td>NOT NULL</td>
+                    <td>Payment method type</td>
+                </tr>
+                <tr>
+                    <td>payment_date</td>
+                    <td>DATE</td>
+                    <td>-</td>
+                    <td>NOT NULL</td>
+                    <td>Date of payment</td>
+                </tr>
+                <tr>
+                    <td>status</td>
+                    <td>VARCHAR</td>
+                    <td>(50)</td>
+                    <td>NOT NULL</td>
+                    <td>Payment status</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.11 payment(audience)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>COLUMN NAME</th>
+                    <th>DATA TYPE</th>
+                    <th>SIZE</th>
+                    <th>CONSTRAINTS</th>
+                    <th>DESCRIPTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>payment_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>PK, AUTO_INCREMENT</td>
+                    <td>Unique audience payment identifier</td>
+                </tr>
+                <tr>
+                    <td>event_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>FK, NOT NULL</td>
+                    <td>Reference to event</td>
+                </tr>
+                <tr>
+                    <td>payment_details_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>FK, NOT NULL</td>
+                    <td>Reference to payment details</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.12 payment(organizer)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>COLUMN NAME</th>
+                    <th>DATA TYPE</th>
+                    <th>SIZE</th>
+                    <th>CONSTRAINTS</t h>
+                    <th>DESCRIPTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>payment_id</td>
+                    <td>INT</td>
+                    <td>-</td>
+                    <td>PK, AUTO_INCREMENT</td>
+                    <td>Unique organizer payment identifier</td>
+                </tr>
+                <tr>
+                    <td>event_id</td>
+                    <td>INT</td>
+                    <td>-</td>
