@@ -23,7 +23,7 @@ class FacilitiesSelected(Base):
     facility_type = relationship('Facility_type', back_populates='facility_select')
     events = relationship('Event', back_populates='facilities')
      
-     
+        
 class FacilityUpdate(Base):
     __tablename__ = "facility_updates"
 

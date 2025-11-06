@@ -1,0 +1,17 @@
+Metadata-Version: 2.1
+Name: dark_swag
+Version: 1.0.4
+Summary: Dark mode Swagger for your FastAPI apps
+Home-page: https://github.com/nebko16/dark_swag
+Author: nebko16
+Author-email: nebko16@gmail.com
+License: GPL-3.0
+Keywords: fastapi openapi swagger dark night darkmode dark-mode theme docs documentation
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: fastapi
+Requires-Dist: jinja2
+Requires-Dist: python-multipart
+
+This module enables Swagger OpenAPI docs that default to dark mode but can be toggled on or off, specifically for FastAPI. Requires virtually zero work to implement. DarkSwag has an optional argument for adding your project or company logo. Implementation is cake, depending on how you implement it. The easiest implementation method involves importing the FastAPI class override, and that's it.  See the `Github` [README](https://github.com/nebko16/dark_swag/blob/main/README.md) for more info.

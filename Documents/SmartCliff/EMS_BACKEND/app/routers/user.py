@@ -10,7 +10,7 @@ from app.dependencies import db
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="Login")
 
 templates = Jinja2Templates(directory='app/templates')
-router = APIRouter()
+router = APIRouter() 
 
 @router.post("/signup", response_model=UserResponse)
 def signup(user_data: UserCreate, db: Session = Depends(db.get_db)):
@@ -18,6 +18,6 @@ def signup(user_data: UserCreate, db: Session = Depends(db.get_db)):
   
 
 @router.post("/Login", response_class=HTMLResponse)
-def login(res: Request, login_input: LoginUser, db: Session = Depends(db.get_db)):
+def login(res: Request, login_input: LoginUser, db: Session = Depends(db.get_db)): 
         user_name = (user_crud.login_user(db, login_input))
         return templates.TemplateResponse('login.html', {'request': res, "name": user_name})

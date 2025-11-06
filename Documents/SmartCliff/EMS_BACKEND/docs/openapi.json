@@ -86,10 +86,1305 @@
                     }
                 }
             }
+        },
+        "/facilities/venues": {
+            "get": {
+                "tags": [
+                    "Facilities"
+                ],
+                "summary": "Get All Venues",
+                "operationId": "get_all_venues_facilities_venues_get",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Show venues only by the Names.",
+                            "title": "Name"
+                        },
+                        "description": "Show venues only by the Names."
+                    },
+                    {
+                        "name": "location",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Show venues only from this location (can match partly).",
+                            "title": "Location"
+                        },
+                        "description": "Show venues only from this location (can match partly)."
+                    },
+                    {
+                        "name": "min_capacity",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Show venues with at least this much capacity.",
+                            "title": "Min Capacity"
+                        },
+                        "description": "Show venues with at least this much capacity."
+                    },
+                    {
+                        "name": "max_price",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "number"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Show only items with price less than or equal to this value.",
+                            "title": "Max Price"
+                        },
+                        "description": "Show only items with price less than or equal to this value."
+                    },
+                    {
+                        "name": "sort_by",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Sort by this column name (like price, name, or capacity).",
+                            "title": "Sort By"
+                        },
+                        "description": "Sort by this column name (like price, name, or capacity)."
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/components/schemas/SortOrder",
+                            "description": "Sort order — 'asc' for ascending, 'desc' for descending.",
+                            "default": "asc"
+                        },
+                        "description": "Sort order — 'asc' for ascending, 'desc' for descending."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/facilities/bands": {
+            "get": {
+                "tags": [
+                    "Facilities"
+                ],
+                "summary": "Get All Bands",
+                "operationId": "get_all_bands_facilities_bands_get",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter bands by name.",
+                            "title": "Name"
+                        },
+                        "description": "Filter bands by name."
+                    },
+                    {
+                        "name": "genre",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter bands by genre.",
+                            "title": "Genre"
+                        },
+                        "description": "Filter bands by genre."
+                    },
+                    {
+                        "name": "member_count",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter bands by member count.",
+                            "title": "Member Count"
+                        },
+                        "description": "Filter bands by member count."
+                    },
+                    {
+                        "name": "max_price",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "number"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Show only bands with price less than or equal to this value.",
+                            "title": "Max Price"
+                        },
+                        "description": "Show only bands with price less than or equal to this value."
+                    },
+                    {
+                        "name": "sort_by",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Sort by this column name (like price, name, or member_count).",
+                            "title": "Sort By"
+                        },
+                        "description": "Sort by this column name (like price, name, or member_count)."
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/components/schemas/SortOrder",
+                            "description": "Sort order — 'asc' or 'desc'.",
+                            "default": "asc"
+                        },
+                        "description": "Sort order — 'asc' or 'desc'."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/facilities/decorations": {
+            "get": {
+                "tags": [
+                    "Facilities"
+                ],
+                "summary": "Get All Decorations",
+                "operationId": "get_all_decorations_facilities_decorations_get",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter decorations by name.",
+                            "title": "Name"
+                        },
+                        "description": "Filter decorations by name."
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter decorations by type.",
+                            "title": "Type"
+                        },
+                        "description": "Filter decorations by type."
+                    },
+                    {
+                        "name": "max_price",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "number"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Show only decorations with price less than or equal to this value.",
+                            "title": "Max Price"
+                        },
+                        "description": "Show only decorations with price less than or equal to this value."
+                    },
+                    {
+                        "name": "sort_by",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Sort by this column name (like price or name).",
+                            "title": "Sort By"
+                        },
+                        "description": "Sort by this column name (like price or name)."
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/components/schemas/SortOrder",
+                            "description": "Sort order — 'asc' or 'desc'.",
+                            "default": "asc"
+                        },
+                        "description": "Sort order — 'asc' or 'desc'."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/facilities/snacks": {
+            "get": {
+                "tags": [
+                    "Facilities"
+                ],
+                "summary": "Get All Snacks",
+                "operationId": "get_all_snacks_facilities_snacks_get",
+                "parameters": [
+                    {
+                        "name": "price",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "number"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter snacks by price.",
+                            "title": "Price"
+                        },
+                        "description": "Filter snacks by price."
+                    },
+                    {
+                        "name": "sort_by",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Sort by this column name (like price or id).",
+                            "title": "Sort By"
+                        },
+                        "description": "Sort by this column name (like price or id)."
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/components/schemas/SortOrder",
+                            "description": "Sort order — 'asc' or 'desc'.",
+                            "default": "asc"
+                        },
+                        "description": "Sort order — 'asc' or 'desc'."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/events/create_new_event": {
+            "post": {
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Create New Event",
+                "operationId": "create_new_event_events_create_new_event_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EventBase"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EventResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/events/facility/": {
+            "get": {
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Check Facility Available",
+                "operationId": "check_facility_available_events_facility__get",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "description": "Facility ID",
+                            "title": "Id"
+                        },
+                        "description": "Facility ID"
+                    },
+                    {
+                        "name": "facility_name",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "Name of the facility",
+                            "title": "Facility Name"
+                        },
+                        "description": "Name of the facility"
+                    },
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "description": "Expected date of the facility",
+                            "title": "Date"
+                        },
+                        "description": "Expected date of the facility"
+                    },
+                    {
+                        "name": "slot",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/SlotEnum",
+                            "description": "Slot of the facility (Morning/Afternoon/Night)"
+                        },
+                        "description": "Slot of the facility (Morning/Afternoon/Night)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/events/myBookings": {
+            "get": {
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Get My Bookings",
+                "operationId": "get_my_bookings_events_myBookings_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/events/event_by_id/{event_id}": {
+            "get": {
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Get Event By Id",
+                "operationId": "get_event_by_id_events_event_by_id__event_id__get",
+                "parameters": [
+                    {
+                        "name": "event_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Event Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/events/update_banner": {
+            "patch": {
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Update Banner",
+                "operationId": "update_banner_events_update_banner_patch",
+                "parameters": [
+                    {
+                        "name": "eventId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "description": "Event Id",
+                            "title": "Eventid"
+                        },
+                        "description": "Event Id"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Body_update_banner_events_update_banner_patch"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/events/get_reschedule_dates": {
+            "get": {
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Get Possible Reschedule Dates",
+                "operationId": "get_possible_reschedule_dates_events_get_reschedule_dates_get",
+                "parameters": [
+                    {
+                        "name": "eventId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "description": "Event Id",
+                            "title": "Eventid"
+                        },
+                        "description": "Event Id"
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "Start date in YYYY-MM-DD ",
+                            "title": "Start Date"
+                        },
+                        "description": "Start date in YYYY-MM-DD "
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "End date in YYYY-MM-DD ",
+                            "title": "End Date"
+                        },
+                        "description": "End date in YYYY-MM-DD "
+                    },
+                    {
+                        "name": "slot",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/SlotEnum",
+                            "description": "Slot of the facility (Morning/Afternoon/Night)"
+                        },
+                        "description": "Slot of the facility (Morning/Afternoon/Night)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/events/facilities": {
+            "get": {
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Check Facilities Available",
+                "operationId": "check_facilities_available_events_facilities_get",
+                "parameters": [
+                    {
+                        "name": "slot",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/SlotEnum",
+                            "description": "Slot of the facility (Morning/Afternoon/Night)"
+                        },
+                        "description": "Slot of the facility (Morning/Afternoon/Night)"
+                    },
+                    {
+                        "name": "venue_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "venue ID",
+                            "title": "Venue Id"
+                        },
+                        "description": "venue ID"
+                    },
+                    {
+                        "name": "band_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Band ID",
+                            "title": "Band Id"
+                        },
+                        "description": "Band ID"
+                    },
+                    {
+                        "name": "decoration_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Decoration ID",
+                            "title": "Decoration Id"
+                        },
+                        "description": "Decoration ID"
+                    },
+                    {
+                        "name": "no_days",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "description": "upto, how many days",
+                            "default": 10,
+                            "title": "No Days"
+                        },
+                        "description": "upto, how many days"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
         "schemas": {
+            "Body_update_banner_events_update_banner_patch": {
+                "properties": {
+                    "banner": {
+                        "type": "string",
+                        "format": "binary",
+                        "title": "Banner",
+                        "description": "Update event Banner image if exist it overwrites"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "banner"
+                ],
+                "title": "Body_update_banner_events_update_banner_patch"
+            },
+            "EventBase": {
+                "properties": {
+                    "event_name": {
+                        "type": "string",
+                        "title": "Event Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "title": "Description"
+                    },
+                    "slot": {
+                        "type": "string",
+                        "enum": [
+                            "Morning",
+                            "Afternoon",
+                            "Night"
+                        ],
+                        "title": "Slot"
+                    },
+                    "event_date": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Event Date"
+                    },
+                    "venue_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Venue ID"
+                    },
+                    "band_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Band ID"
+                    },
+                    "decoration_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Decoration ID"
+                    },
+                    "snacks_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Snacks ID"
+                    },
+                    "snacks_count": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Snacks Count"
+                    },
+                    "ticket_enabled": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Ticket Enabled",
+                        "default": false
+                    },
+                    "platinum_ticket_price": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Platinum Ticket Price"
+                    },
+                    "platinum_ticket_count": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Count of the platinum ticket"
+                    },
+                    "gold_ticket_price": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Gold Ticket Price"
+                    },
+                    "gold_ticket_count": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Count of the gold ticket"
+                    },
+                    "silver_ticket_price": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Silver Ticket Price"
+                    },
+                    "silver_ticket_count": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Count of the Silver ticket"
+                    },
+                    "payment_type": {
+                        "type": "string",
+                        "enum": [
+                            "Full payment",
+                            "Half payment"
+                        ],
+                        "title": "Payment Type"
+                    },
+                    "payment_mode": {
+                        "type": "string",
+                        "enum": [
+                            "UPI",
+                            "Credit Card",
+                            "Debit Card"
+                        ],
+                        "title": "Payment Mode"
+                    },
+                    "payment_amount": {
+                        "type": "integer",
+                        "title": "total amount"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "event_name",
+                    "description",
+                    "slot",
+                    "event_date",
+                    "payment_type",
+                    "payment_mode",
+                    "payment_amount"
+                ],
+                "title": "EventBase"
+            },
+            "EventResponse": {
+                "properties": {
+                    "event_name": {
+                        "type": "string",
+                        "title": "Event Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "title": "Description"
+                    },
+                    "slot": {
+                        "type": "string",
+                        "enum": [
+                            "Morning",
+                            "Afternoon",
+                            "Night"
+                        ],
+                        "title": "Slot"
+                    },
+                    "event_date": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Event Date"
+                    },
+                    "venue_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Venue ID"
+                    },
+                    "band_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Band ID"
+                    },
+                    "decoration_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Decoration ID"
+                    },
+                    "snacks_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Snacks ID"
+                    },
+                    "snacks_count": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Snacks Count"
+                    },
+                    "ticket_enabled": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Ticket Enabled",
+                        "default": false
+                    },
+                    "platinum_ticket_price": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Platinum Ticket Price"
+                    },
+                    "platinum_ticket_count": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Count of the platinum ticket"
+                    },
+                    "gold_ticket_price": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Gold Ticket Price"
+                    },
+                    "gold_ticket_count": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Count of the gold ticket"
+                    },
+                    "silver_ticket_price": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Silver Ticket Price"
+                    },
+                    "silver_ticket_count": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Count of the Silver ticket"
+                    },
+                    "payment_type": {
+                        "type": "string",
+                        "enum": [
+                            "Full payment",
+                            "Half payment"
+                        ],
+                        "title": "Payment Type"
+                    },
+                    "payment_mode": {
+                        "type": "string",
+                        "enum": [
+                            "UPI",
+                            "Credit Card",
+                            "Debit Card"
+                        ],
+                        "title": "Payment Mode"
+                    },
+                    "payment_amount": {
+                        "type": "integer",
+                        "title": "total amount"
+                    },
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "title": "User Id"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Created At"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/EventStatus"
+                    },
+                    "payment_id": {
+                        "type": "integer",
+                        "title": "Payment Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "event_name",
+                    "description",
+                    "slot",
+                    "event_date",
+                    "payment_type",
+                    "payment_mode",
+                    "payment_amount",
+                    "id",
+                    "user_id",
+                    "created_at",
+                    "status",
+                    "payment_id"
+                ],
+                "title": "EventResponse"
+            },
+            "EventStatus": {
+                "type": "string",
+                "enum": [
+                    "booked",
+                    "rescheduled",
+                    "cancelled"
+                ],
+                "title": "EventStatus"
+            },
             "HTTPValidationError": {
                 "properties": {
                     "detail": {
@@ -121,6 +1416,23 @@
                     "password"
                 ],
                 "title": "LoginUser"
+            },
+            "SlotEnum": {
+                "type": "string",
+                "enum": [
+                    "Morning",
+                    "Afternoon",
+                    "Night"
+                ],
+                "title": "SlotEnum"
+            },
+            "SortOrder": {
+                "type": "string",
+                "enum": [
+                    "asc",
+                    "desc"
+                ],
+                "title": "SortOrder"
             },
             "UserCreate": {
                 "properties": {
@@ -164,8 +1476,7 @@
             "UserResponse": {
                 "properties": {
                     "id": {
-                        "type": "string",
-                        "format": "uuid",
+                        "type": "integer",
                         "title": "Id"
                     },
                     "name": {
@@ -182,8 +1493,7 @@
                         "title": "Phone"
                     },
                     "role_id": {
-                        "type": "string",
-                        "format": "uuid",
+                        "type": "integer",
                         "title": "Role Id"
                     },
                     "created_at": {

@@ -16,7 +16,7 @@ class UserCRUD:
         if db.query(User).filter(User.email == user.email).first():
             raise HTTPException(status_code=400, detail="Email already registered")
 
-        role = db.query(Role).filter((Role.name) == (user.role).lower()).first()
+        role = db.query(Role).filter((Role.name) == (user.role)).first()
         
         print(role)
         if not role:
@@ -27,7 +27,7 @@ class UserCRUD:
             email=user.email,
             phone=user.phone,
             password=pwd_context.hash(user.password),
-            role_id=role.role_id,
+            role_id=role.id,
             created_at=date.today(),
             status=True
         )

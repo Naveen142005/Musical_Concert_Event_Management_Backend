@@ -1,8 +1,27 @@
+from datetime import date
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from app.models.enum import SortOrder
+from app.models.enum import SlotEnum, SortOrder
 from app.services import facility
 from app.dependencies import db
+
+import enum
+from fastapi import APIRouter, Form, Query, UploadFile, File, Depends, HTTPException
+from typing import Optional, Literal
+from datetime import date, datetime
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy.orm import Session
+from app.models.events import Event
+from app.models.facilities import Venues
+from app.schemas.event import EventBase, EventResponse, RescheduleEventRequest
+from app.models.enum import EventStatus, PaymentStatus, SlotEnum
+from app.dependencies import db
+from app.crud.event import event, event_crud
+from app.schemas.payment import CancelEventRequest
+from app.services.facility import facility_service
+from app.services.events import event_service
+from app.services.ticket import ticket_service
+from app.utils.common import commit, create_error, insert_data, update_data
 
 router = APIRouter(prefix="/facilities")
 service = facility.FacilityGettingService()
@@ -82,3 +101,21 @@ def get_all_snacks(
         "order": order
     }
     return service.get_snacks(db, model_dict)
+
+@router.get("/facility/")
+def check_facility_available(
+    id: int = Query(..., description="Facility ID"),
+    facility_name: str = Query(..., description="Name of the facility (venue/band/decoration)"),
+    date: date = Query(..., description="Expected date of the facility (YYYY-MM-DD)"),
+    slot: SlotEnum = Query(..., description="Slot of the facility (Morning/Afternoon/Night)"),
+    db: Session = Depends(db.get_db)
+):
+    
+    if id <= 0:
+        create_error('Provide valid facility Id')
+    
+    res =  facility_service.check_avaiable(db, id, facility_name, date, slot)
+    if not res:
+        return {"res": True , "mes" :f'{facility_name} id_{id} is available on {date}'}
+    else:
+        return {"res": False , "mes" :f'{facility_name} id_{id} is not available on {date}'}

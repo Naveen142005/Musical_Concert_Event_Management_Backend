@@ -4,9 +4,10 @@ from app.models.role import Role
 from app.models.events import Event, EventStatusHistory
 from app.models.facilities import Venues, Bands, Decorations, Snacks
 from app.models.facilities_selected import FacilitiesSelected, Facility_type, FacilityUpdate
-from app.models.payment import PaymentAudience, PaymentDetails, PaymentOrganizer, RefundAudience, RefundOrganizer
+from app.models.payment import Payment
+from app.models.refund import Refund
 from app.models.tickets import Tickets
-
+from app.models.bookings import Bookings, BookingDetails
 
 
 # # Drop all tables (optional reset)
@@ -15,4 +16,7 @@ from app.models.tickets import Tickets
 
 Base.metadata.create_all(bind=engine)
 print("✅ Tables created successfully!") 
+
+
+
 

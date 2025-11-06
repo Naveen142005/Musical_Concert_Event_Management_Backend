@@ -15,11 +15,11 @@ class UserCreate(BaseModel):
     password: str
 
 class UserResponse(BaseModel):
-    id: UUID
+    id: int
     name: str
     email: EmailStr
     phone: int
-    role_id: UUID
+    role_id: int
     created_at: date
     status: bool
 
@@ -29,4 +29,3 @@ class UserResponse(BaseModel):
 class LoginUser(BaseModel):
     email: EmailStr
     password: str
-    
