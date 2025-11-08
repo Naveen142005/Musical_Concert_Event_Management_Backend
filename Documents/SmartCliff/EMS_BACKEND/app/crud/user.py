@@ -28,7 +28,6 @@ class UserCRUD:
             phone=user.phone,
             password=pwd_context.hash(user.password),
             role_id=role.id,
-            created_at=date.today(),
             status=True
         )
 
@@ -43,13 +42,13 @@ class UserCRUD:
     
     def login_user(self, db: Session, curr_user: LoginUser):
         user_db = db.query(User).filter(User.email == curr_user.email).first()
-        print( "hellooooooooooooooooooooooooooo" , user_db)
+
         if not user_db:
             raise HTTPException(status_code=400, detail="Invaild Email")
         
         if not pwd_context.verify(curr_user.password, user_db.password):
             raise HTTPException(status_code=400, detail="Invalid password")
-        print("OK")
+  
         return db.query(User).filter(User.email == curr_user.email).first().name
         
 user_crud = UserCRUD()

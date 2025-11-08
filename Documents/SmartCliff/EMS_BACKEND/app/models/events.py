@@ -1,4 +1,4 @@
-from sqlalchemy import Enum as SqlEnum
+from sqlalchemy import DateTime, Enum as SqlEnum
 
 import uuid
 from datetime import datetime, date
@@ -22,7 +22,7 @@ class Event(Base):
     status = Column(SqlEnum(EventStatus), default=EventStatus.BOOKED)
     ticket_open_date = Column(Date, nullable=True)
     
-    created_at = Column(Date, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow)
     total_amount = Column(Integer, nullable= False)
     payment_id = Column(Integer, ForeignKey("payments.id"))
     
@@ -38,7 +38,7 @@ class Event(Base):
     facilities = relationship("FacilitiesSelected", back_populates="events")
     tickets = relationship('Tickets', back_populates='events')
     bookings = relationship("Bookings", back_populates="event")
-
+ 
 
 
 class EventStatusHistory(Base):
@@ -47,7 +47,7 @@ class EventStatusHistory(Base):
     id = Column(Integer, primary_key=True, index=True)
     event_id = Column(Integer, ForeignKey("events.id"), nullable=False)
     status = Column(String)
-    date = Column(Date, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow)
     
 
     events = relationship("Event", back_populates="status_history")

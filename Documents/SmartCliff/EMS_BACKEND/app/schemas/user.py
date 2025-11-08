@@ -20,7 +20,6 @@ class UserResponse(BaseModel):
     email: EmailStr
     phone: int
     role_id: int
-    created_at: date
     status: bool
 
     class Config:

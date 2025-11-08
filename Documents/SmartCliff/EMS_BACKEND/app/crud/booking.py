@@ -4,8 +4,8 @@ from datetime import datetime
 from sqlalchemy import func
 from app.models.bookings import Bookings, BookingDetails
 from app.models.events import Event
-from app.models.payment import Payment
-from app.models.refund import Refund
+from app.models.payment import Payment, PaymentStatusHistory
+from app.models.refund import Refund, RefundStatusHistory
 from app.models.tickets import Tickets
 
 from app.routers import booking
@@ -16,7 +16,7 @@ from fastapi import HTTPException, status
 
 
 class BookingCRUD:
-    def create_booking(_, db: Session, booking_data: BookingCreate):
+    def create_booking(_, db: Session, booking_data: BookingCreate,user_id):
         try:
             if not get_row(db, Event, id = booking_data.event_id):
                 raise HTTPException(status_code=404, message ='Event data not Found')
@@ -90,10 +90,8 @@ class BookingCRUD:
             booking = insert_data_flush(
                 db,
                 Bookings,
-                user_id=booking_data.user_id,
+                user_id=user_id,
                 event_id=booking_data.event_id,
-            
-                booked_date=datetime.utcnow().date(),
                 total_tickets=total_tickets,
                 total_amount=total_amount
                 
@@ -121,10 +119,17 @@ class BookingCRUD:
             payment = insert_data_flush(
                 db,
                 Payment,
-                user_id=booking_data.user_id,
+                user_id= user_id,
                 event_id=booking_data.event_id,
                 payment_amount=total_amount,
                 payment_mode = booking_data.payment_mode,
+                status=PaymentStatus.COMPLETED
+            )
+            
+            insert_data(
+                db,
+                PaymentStatusHistory,
+                payment_id = payment.id,
                 status=PaymentStatus.COMPLETED
             )
             
@@ -221,21 +226,32 @@ class BookingCRUD:
         
         event_status = get_row(db, Event, id = event_id).status
         
-        print("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-        print(res)
+        
         refund_amount = res.Payment.payment_amount
         if event_status == EventStatus.BOOKED: 
             refund_amount = refund_amount * 0.8
-        print (refund_amount)
-        insert_data(
+
+        refund_data = insert_data_flush(
             db,
             Refund,
             payment_id = res.Bookings.payment_id,
             refund_reason = reason,
-            refund_date = datetime.utcnow(),
             refund_amount = refund_amount
         )
         
+        
+        insert_data(
+            db,
+            PaymentStatusHistory,
+            payment_id = res.Bookings.payment_id,
+            status = PaymentStatus.REFUND_INITIATED
+        )
+        
+        insert_data(
+            db,
+            RefundStatusHistory,
+            refund_id = refund_data.id
+        )
         
         
         commit(db)

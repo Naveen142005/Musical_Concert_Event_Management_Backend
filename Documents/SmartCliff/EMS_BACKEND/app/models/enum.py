@@ -3,13 +3,15 @@ from enum import Enum
 
 from enum import Enum
 
+class PaymentMode(str, Enum):
+    UPI = "upi"
+    CREDIT_CARD = "credit_card"
+    
+
 class BookingStatus(str, Enum):
     BOOKED = "booked"
     CANCELLED = "cancelled"
     COMPLETED = "completed"
-    REFUNDED = "refunded"
-    PENDING = "pending"
-    FAILED = "failed"
 # ==========================
 # Event Status Enum
 # ==========================
@@ -24,6 +26,13 @@ class SlotEnum(str, Enum):
     morning = "Morning"
     afternoon = "Afternoon"
     night = "Night"
+
+
+
+class DateType(str, Enum):
+    BOOKED_DATE = "booked_date"
+    EVENT_DATE = "event_date"
+
 
 # ==========================
 # Payment Status Enum
@@ -44,6 +53,9 @@ class RefundStatus(str, Enum):
     COMPLETED = "completed"
     REJECTED = "rejected"
 
+class RoleType(str, Enum):
+    audience = "audience"
+    organizer = "organizer"
 
 
 # ==========================
@@ -54,9 +66,10 @@ class UserRole(str, Enum):
     ORGANIZER = "organizer"
     AUDIENCE = "audience"
 
+
+
 class FacilityStatus(str, Enum):
     AVAILABLE = "available"
-    BOOKED = "booked"
     Deactivated = "deactivated"
     UNDER_MAINTENANCE = "under_maintenance"
     

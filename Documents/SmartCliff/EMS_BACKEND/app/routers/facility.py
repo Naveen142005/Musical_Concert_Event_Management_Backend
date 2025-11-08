@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from app.models.enum import SlotEnum, SortOrder
@@ -23,11 +23,23 @@ from app.services.events import event_service
 from app.services.ticket import ticket_service
 from app.utils.common import commit, create_error, insert_data, update_data
 
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from app.crud import facility as crud
+from app.schemas.facility import (
+    VenueBase, VenueResponse, VenueUpdate,
+    BandBase, BandResponse, BandUpdate,
+    DecorationBase, DecorationResponse, DecorationUpdate,
+    SnackBase, SnackResponse, SnackUpdate
+)
+from typing import List
+
 router = APIRouter(prefix="/facilities")
 service = facility.FacilityGettingService()
 
 
-@router.get("/venues")
+@router.get("/get_venues")
 def get_all_venues(
     name: str | None = Query(None, description="Show venues only by the Names."),
     location: str | None = Query(None, description="Show venues only from this location (can match partly)."),
@@ -48,7 +60,7 @@ def get_all_venues(
     return service.get_venues(db, model_dict)
 
 
-@router.get("/bands")
+@router.get("/get_bands")
 def get_all_bands(
     name: str | None = Query(None, description="Filter bands by name."),
     genre: str | None = Query(None, description="Filter bands by genre."),
@@ -69,7 +81,7 @@ def get_all_bands(
     return service.get_bands(db, model_dict)
 
 
-@router.get("/decorations")
+@router.get("/get_decorations")
 def get_all_decorations(
     name: str | None = Query(None, description="Filter decorations by name."),
     type: str | None = Query(None, description="Filter decorations by type."),
@@ -88,7 +100,7 @@ def get_all_decorations(
     return service.get_decorations(db, model_dict)
 
 
-@router.get("/snacks")
+@router.get("/get_snacks")
 def get_all_snacks(
     price: float | None = Query(None, description="Filter snacks by price."),
     sort_by: str | None = Query(None, description="Sort by this column name (like price or id)."),
@@ -119,3 +131,126 @@ def check_facility_available(
         return {"res": True , "mes" :f'{facility_name} id_{id} is available on {date}'}
     else:
         return {"res": False , "mes" :f'{facility_name} id_{id} is not available on {date}'}
+
+@router.get("/booked-events")
+def get_booked_facility_events(
+    facility_type_id: int = Query(..., gt=0, description="Valid facility type ID"),
+    facility_id: int = Query(..., gt=0, description="Valid facility ID"),
+    start_date: date = Query(..., description="Start date for filtering bookings"),
+    end_date: date = Query(..., description="End date for filtering bookings"),
+    db: Session = Depends(db.get_db)
+):
+    events = facility_service.get_facility_bookings(db, facility_type_id, facility_id, start_date, end_date)
+    
+    if not events:
+        raise HTTPException(status_code=404, detail="No events found for this facility within the given date range")
+    
+    return events
+
+
+# ========== VENUES ==========
+@router.post("/venues", response_model=VenueResponse)
+def create_venue(data: VenueBase, db: Session = Depends(db.get_db)):
+    return crud.create_facility(db, 1, data.dict())
+
+@router.get("/venues/{venue_id}", response_model=VenueResponse)
+def get_venue(venue_id: int, db: Session = Depends(db.get_db)):
+    facility = crud.get_facility_by_id(db, 1, venue_id)
+    if not facility:
+        raise HTTPException(404, "Venue not found")
+    return facility
+
+@router.put("/venues/{venue_id}", response_model=VenueResponse)
+def update_venue(venue_id: int, data: VenueUpdate, db: Session = Depends(db.get_db)):
+    facility = crud.update_facility(db, 1, venue_id, data.dict(exclude_unset=True))
+    if not facility:
+        raise HTTPException(404, "Venue not found")
+    return facility
+
+@router.delete("/venues/{venue_id}")
+def delete_venue(venue_id: int, db: Session = Depends(db.get_db)):
+    facility = crud.delete_facility(db, 1, venue_id)
+    if not facility:
+        raise HTTPException(404, "Venue not found")
+    return {"message": "Venue deleted successfully"}
+
+
+# ========== BANDS ==========
+@router.post("/bands", response_model=BandResponse)
+def create_band(data: BandBase, db: Session = Depends(db.get_db)):
+    return crud.create_facility(db, 2, data.dict())
+
+@router.get("/bands/{band_id}", response_model=BandResponse)
+def get_band(band_id: int, db: Session = Depends(db.get_db)):
+    facility = crud.get_facility_by_id(db, 2, band_id)
+    if not facility:
+        raise HTTPException(404, "Band not found")
+    return facility
+
+@router.put("/bands/{band_id}", response_model=BandResponse)
+def update_band(band_id: int, data: BandUpdate, db: Session = Depends(db.get_db)):
+    facility = crud.update_facility(db, 2, band_id, data.dict(exclude_unset=True))
+    if not facility:
+        raise HTTPException(404, "Band not found")
+    return facility
+
+@router.delete("/bands/{band_id}")
+def delete_band(band_id: int, db: Session = Depends(db.get_db)):
+    facility = crud.delete_facility(db, 2, band_id)
+    if not facility:
+        raise HTTPException(404, "Band not found")
+    return {"message": "Band deleted successfully"}
+
+
+# ========== DECORATIONS ==========
+@router.post("/decorations", response_model=DecorationResponse)
+def create_decoration(data: DecorationBase, db: Session = Depends(db.get_db)):
+    return crud.create_facility(db, 3, data.dict())
+
+@router.get("/decorations/{decoration_id}", response_model=DecorationResponse)
+def get_decoration(decoration_id: int, db: Session = Depends(db.get_db)):
+    facility = crud.get_facility_by_id(db, 3, decoration_id)
+    if not facility:
+        raise HTTPException(404, "Decoration not found")
+    return facility
+
+@router.put("/decorations/{decoration_id}", response_model=DecorationResponse)
+def update_decoration(decoration_id: int, data: DecorationUpdate, db: Session = Depends(db.get_db)):
+    facility = crud.update_facility(db, 3, decoration_id, data.dict(exclude_unset=True))
+    if not facility:
+        raise HTTPException(404, "Decoration not found")
+    return facility
+
+@router.delete("/decorations/{decoration_id}")
+def delete_decoration(decoration_id: int, db: Session = Depends(db.get_db)):
+    facility = crud.delete_facility(db, 3, decoration_id)
+    if not facility:
+        raise HTTPException(404, "Decoration not found")
+    return {"message": "Decoration deleted successfully"}
+
+
+# ========== SNACKS ==========
+@router.post("/snacks", response_model=SnackResponse)
+def create_snack(data: SnackBase, db: Session = Depends(db.get_db)):
+    return crud.create_facility(db, 4, data.dict())
+
+@router.get("/snacks/{snack_id}", response_model=SnackResponse)
+def get_snack(snack_id: int, db: Session = Depends(db.get_db)):
+    facility = crud.get_facility_by_id(db, 4, snack_id)
+    if not facility:
+        raise HTTPException(404, "Snack not found")
+    return facility
+
+@router.put("/snacks/{snack_id}", response_model=SnackResponse)
+def update_snack(snack_id: int, data: SnackUpdate, db: Session = Depends(db.get_db)):
+    facility = crud.update_facility(db, 4, snack_id, data.dict(exclude_unset=True))
+    if not facility:
+        raise HTTPException(404, "Snack not found")
+    return facility
+
+@router.delete("/snacks/{snack_id}")
+def delete_snack(snack_id: int, db: Session = Depends(db.get_db)):
+    facility = crud.delete_facility(db, 4, snack_id)
+    if not facility:
+        raise HTTPException(404, "Snack not found")
+    return {"message": "Snack deleted successfully"}

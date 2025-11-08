@@ -16,7 +16,6 @@ class TicketRequest(BaseModel):
 
 
 class BookingCreate(BaseModel):
-    user_id: int = Field(..., gt=0)
     event_id: int = Field(..., gt=0)
     tickets: List[TicketRequest]
     payment_mode: Literal["UPI", "Credit Card", "Debit Card"] = Field(..., title="Payment Mode")

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.models.events import Event
 from app.models.facilities import Venues
 from app.schemas.event import EventBase, EventResponse, RescheduleEventRequest
-from app.models.enum import EventStatus, PaymentStatus, SlotEnum
+from app.models.enum import DateType, EventStatus, PaymentMode, PaymentStatus, SlotEnum
 from app.dependencies import db
 from app.crud.event import event, event_crud
 from app.schemas.payment import CancelEventRequest
@@ -56,18 +56,11 @@ async def get_my_bookings(db:Session = Depends(db.get_db)):
  
 
 @router.post('/pay_pending_amount/{event_id}')
-def pay_pending_amount (event_id:int, db: Session = Depends(db.get_db)):
+def pay_pending_amount (event_id:int, payment_mode: PaymentMode =  Query(PaymentMode.UPI, description="Payment mode"), db: Session = Depends(db.get_db)):
     user_id = 1 # fetch from cookie 
-    return event_crud.pay_pending_amount(event_id, user_id,db)
-
- 
-@router.get('/payment_details/{event_id}')
-def get_my_booking_payment_details(event_id: int, db: Session = Depends(db.get_db)):
-    user_id = 1
-    return payment_service.get_my_booking_payment_details(event_id, user_id,db)
+    return event_crud.pay_pending_amount(event_id, user_id,payment_mode, db)
 
 
- 
 
 
 @router.patch("/update_banner")
@@ -138,3 +131,32 @@ def cancel_event(
     user_id = 1 # Fetch from cookine
     return event_crud.cancel_event(event_id, db, body.reason, user_id)
 
+
+@router.get("/booked-events")
+async def get_booked_events(
+    start_date: Optional[date] = Query(None, description="Filter from this date"),
+    end_date: Optional[date] = Query(None, description="Filter until this date"),
+    search: Optional[str] = Query(None, description="Global search across event fields"),
+    status: Optional[EventStatus] = Query(None,
+        description="Filter by status: upcoming, past, ongoing, rescheduled, cancelled"
+    ),
+    slot: SlotEnum = Query(None, description="Slot of the facility (Morning/Afternoon/Night)"),
+    date_type: Optional[DateType] = Query(
+        None,
+        description="Filter by: booked_date or event_date"
+    ),
+    db: Session = Depends(db.get_db)
+):
+    # ✅ Validation
+    print("==================")
+    if start_date and end_date and start_date > end_date:
+        raise HTTPException(status_code=400, detail="Start date cannot be after end date")
+    print(slot , "====--")
+    
+    events = await event_service.get_booked_events_1(db, start_date, end_date, search, status, date_type, slot)
+
+
+    if not events:
+        raise HTTPException(status_code=404, detail="No events found")
+
+    return events

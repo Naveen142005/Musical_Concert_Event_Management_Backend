@@ -4,13 +4,6 @@ from app.database.connection import Base
 
 
 
-class Facility_type(Base):
-    __tablename__ = 'facility_type'
-    id = Column(Integer, primary_key=True, index=True)
-    facility_type = Column(String, nullable=False) 
-    
-    facility_update = relationship('FacilityUpdate', back_populates='facility_type')
-    facility_select = relationship('FacilitiesSelected', back_populates='facility_type')
 
 
 class FacilitiesSelected(Base):
@@ -23,6 +16,15 @@ class FacilitiesSelected(Base):
     facility_type = relationship('Facility_type', back_populates='facility_select')
     events = relationship('Event', back_populates='facilities')
      
+     
+class Facility_type(Base):
+    __tablename__ = 'facility_type'
+    id = Column(Integer, primary_key=True, index=True)
+    facility_type = Column(String, nullable=False) 
+    
+    facility_update = relationship('FacilityUpdate', back_populates='facility_type')
+    facility_select = relationship('FacilitiesSelected', back_populates='facility_type')
+
         
 class FacilityUpdate(Base):
     __tablename__ = "facility_updates"

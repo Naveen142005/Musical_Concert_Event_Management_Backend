@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Date, ForeignKey
+from datetime import datetime
+from sqlalchemy import Column, DateTime, Integer, String, Date, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Date, ForeignKey, Enum as SqlEnum
@@ -14,7 +15,7 @@ class Bookings(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     event_id = Column(Integer, ForeignKey("events.id"), nullable=False)
     payment_id = Column(Integer, ForeignKey("payments.id"))
-    booked_date = Column(Date, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
     total_tickets = Column(Integer, nullable=False)
     total_amount = Column(Integer, nullable=False)
     status = Column(SqlEnum(BookingStatus), default=BookingStatus.BOOKED, nullable=False)
@@ -26,7 +27,7 @@ class Bookings(Base):
 
 
 class BookingDetails(Base):
-    __tablename__ = "booking_details"
+    __tablename__ = "booking_ticket_details"
 
     booking_details_id = Column(Integer, primary_key=True, autoincrement=True)
     booking_id = Column(Integer, ForeignKey("bookings.id"), nullable=False)

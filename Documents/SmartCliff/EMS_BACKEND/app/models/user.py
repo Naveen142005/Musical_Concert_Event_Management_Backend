@@ -1,7 +1,7 @@
 import uuid
-from sqlalchemy import UUID, Column, ForeignKey, Integer, String, Date, Boolean
+from sqlalchemy import UUID, Column, DateTime, ForeignKey, Integer, String, Date, Boolean
 from app.database.connection import Base
-from datetime import date
+from datetime import date, datetime
 from sqlalchemy.orm import relationship
 
 class User(Base):
@@ -13,7 +13,7 @@ class User(Base):
     email = Column(String, nullable=False, unique=True)
     phone = Column(Integer)
     password = Column(String, nullable=False)
-    created_at = Column(Date, default=date.today)
+    created_at = Column(DateTime, default=datetime.utcnow)
     status = Column(Boolean, default=True)
 
     role = relationship("Role", back_populates="user")

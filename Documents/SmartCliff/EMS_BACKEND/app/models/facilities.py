@@ -27,7 +27,6 @@ class Bands(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     genre = Column(String)
-    capacity = Column(Integer)
     member_count = Column(Integer)
     price = Column(Float)
     status = Column(SqlEnum(FacilityStatus), default=FacilityStatus.AVAILABLE)
@@ -50,7 +49,7 @@ class Decorations(Base):
 #  Booked Snacks Table
 # ========================
 class Snacks(Base):
-    __tablename__ = "booked_snacks"
+    __tablename__ = "snacks"
 
     id = Column(Integer, primary_key=True, index=True)
     snacks = Column(ARRAY(String))

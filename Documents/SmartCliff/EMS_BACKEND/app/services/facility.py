@@ -176,6 +176,7 @@ class FacilityService:
                     Facility_type.facility_type == facility_name,
                     Event.event_date == date,   
                     FacilitiesSelected.facility_id == facility_id,
+                    Event.slot == slot,
                     Event.status.in_([EventStatus.BOOKED, EventStatus.RESCHEDULED])
                 )
             ).first()
@@ -242,9 +243,44 @@ class FacilityService:
                 all_available_dates.append(date_str.strftime("%Y-%m-%d"))
             date_str += timedelta(days=1)
                         
-        return all_available_dates  
-  
+        return all_available_dates
         
+    def get_facility_bookings(self, db: Session, facility_type_id: int, facility_id: int, start_date, end_date):
+        # Ensure valid date range
+        if start_date > end_date:
+            raise ValueError("start_date cannot be greater than end_date")
+
+        query = (
+            db.query(
+                Event.id.label("event_id"),
+                Event.name,
+                Event.event_date,
+                Event.created_at
+            )
+            .join(FacilitiesSelected, FacilitiesSelected.event_id == Event.id)
+            .filter(
+                and_(
+                    FacilitiesSelected.facility_type_id == facility_type_id,
+                    FacilitiesSelected.facility_id == facility_id,
+                    Event.event_date >= start_date,
+                    Event.event_date <= end_date
+                )
+            )
+            .all()
+        )
+        results = [
+            {
+                "event_id": row.event_id,
+                "name": row.name,
+                "event_date": row.event_date,
+                "created_at": row.created_at
+            }
+            for row in query
+        ]
+        return results
+
+    
+            
         
 facility_service = FacilityService()
 

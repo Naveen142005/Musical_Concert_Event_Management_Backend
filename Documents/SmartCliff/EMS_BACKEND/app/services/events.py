@@ -3,19 +3,22 @@ import uuid
 from datetime import date, datetime as dayTime, timedelta
 from fastapi.encoders import jsonable_encoder
 from pytest import Session
-from sqlalchemy import and_, or_
+from sqlalchemy import String, and_, cast, or_
 from app.models.enum import EventStatus, PaymentStatus
 from app.models.events import Event
 from app.models.facilities import Bands, Decorations, Snacks, Venues
 from app.models.facilities_selected import FacilitiesSelected, Facility_type
 from app.models.payment import Payment
 from app.models.tickets import Tickets
+from app.models.user import User
 from app.schemas.event import EventBase
 from app.utils.common import create_error, get_row, get_rows, update_data
 from app.services.ticket import ticket_service
 from app.services.facility import facility_service
-from trash.venue import Venue
 from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import aliased
+from app.database.connection_mongo import col
+   
 
 class EventService:
     
@@ -300,7 +303,8 @@ class EventService:
         start_date: date = None,
         end_date: date = None,
         min_price: float = None,
-        max_price: float = None
+        max_price: float = None,
+        slot: str = None
     ):
         
 
@@ -323,6 +327,8 @@ class EventService:
             query = query.filter(Event.event_date >= start_date)
         if end_date:
             query = query.filter(Event.event_date <= end_date)
+        if slot:
+            query = query.filter(Event.slot == slot)
 
         # Facility filter
         if facility_name:
@@ -394,9 +400,229 @@ class EventService:
 
         return result
 
+    def get_booked_events(self, db, start_date=None, end_date=None, search=None, status=None, date_type="event_date", slot=None):
+        fsv = aliased(FacilitiesSelected)
+        fsb = aliased(FacilitiesSelected)
+        fsc = aliased(FacilitiesSelected)
+        fss = aliased(FacilitiesSelected)
 
+        query = (
+            db.query(
+                Event.id.label("event_id"),
+                Event.name.label("event_name"),
+                Event.event_date,
+                Event.created_at,
+                User.name.label("organizer_name"),
+                Event.status.label("status"),
+                Venues.name.label("venue_name"),
+                Venues.price.label("venue_price"),
+                Venues.capacity.label("venue_capacity"),
+                Venues.location.label("venue_location"),
+                Bands.name.label("band_name"),
+                Bands.price.label("band_price"),
+                Bands.genre.label("band_genre"),
+                Bands.member_count.label("band_members"),
+                Decorations.name.label("decoration_name"),
+                Decorations.type.label("decoration_type"),
+                Decorations.price.label("decoration_price"),
+                Snacks.snacks.label("snack_items"),
+                Snacks.price.label("snack_price"),
+            )
+            .join(User, Event.user_id == User.id)
+            .outerjoin(fsv, and_(fsv.event_id == Event.id, fsv.facility_type_id == 1))
+            .outerjoin(Venues, Venues.id == fsv.facility_id)
+            .outerjoin(fsb, and_(fsb.event_id == Event.id, fsb.facility_type_id == 2))
+            .outerjoin(Bands, Bands.id == fsb.facility_id)
+            .outerjoin(fsc, and_(fsc.event_id == Event.id, fsc.facility_type_id == 3))
+            .outerjoin(Decorations, Decorations.id == fsc.facility_id)
+            .outerjoin(fss, and_(fss.event_id == Event.id, fss.facility_type_id == 4))
+            .outerjoin(Snacks, Snacks.id == fss.facility_id)
+        )
+
+        date_column = Event.created_at if date_type == "booked_date" else Event.event_date
+
+        if start_date and end_date:
+            query = query.filter(and_(date_column >= start_date, date_column <= end_date))
+        elif start_date:
+            query = query.filter(date_column >= start_date)
+        elif end_date:
+            query = query.filter(date_column <= end_date)
 
         
+        if slot:
+            query = query.filter(Event.slot == slot)
+        if search:
+            like = f"%{search.lower()}%"
+            query = query.filter(
+                or_(
+                    Event.name.ilike(like),
+                    User.name.ilike(like),
+                    Venues.name.ilike(like),
+                    Bands.name.ilike(like),
+                    Decorations.name.ilike(like),
+                    cast(Event.status, String).ilike(like),
+                )
+            )
+
+        if status:
+            status_map = {
+                "upcoming": EventStatus.BOOKED,
+                "past": EventStatus.COMPLETED,
+                "ongoing": EventStatus.ONGOING,
+                "rescheduled": EventStatus.RESCHEDULED,
+                "cancelled": EventStatus.CANCELLED,
+            }
+            mapped = status_map.get(status.lower())
+            if mapped:
+                query = query.filter(Event.status == mapped)
+
+        results = query.order_by(Event.id).all()
+        response = []
+
+        for r in results:
+            status_val = getattr(r.status, "value", r.status)
+            data = {
+                "event_id": r.event_id,
+                "event_name": r.event_name,
+                "organizer_name": r.organizer_name,
+                "event_date": r.event_date.isoformat() if isinstance(r.event_date, date) else r.event_date,
+                "booked_date": r.created_at.isoformat() if isinstance(r.created_at, date) else r.created_at,
+                "status": str(status_val),
+            }
+
+            if r.venue_name:
+                data["venue"] = {
+                    "name": r.venue_name,
+                    "price": r.venue_price,
+                    "capacity": r.venue_capacity,
+                    "location": r.venue_location,
+                }
+
+            if r.band_name:
+                data["band"] = {
+                    "name": r.band_name,
+                    "genre": r.band_genre,
+                    "members": r.band_members,
+                    "price": r.band_price,
+                }
+
+            if r.decoration_name:
+                data["decoration"] = {
+                    "name": r.decoration_name,
+                    "type": r.decoration_type,
+                    "price": r.decoration_price,
+                }
+
+            if r.snack_items:
+                data["snacks"] = {
+                    "items": r.snack_items,
+                    "price": r.snack_price,
+                }
+
+            response.append(data)
+
+        return response
+
+
+    
+    async def get_booked_events_1(slef, db, start_date=None, end_date=None, search=None, status=None, date_type=None, slot=None):
+    # Step 1: Get data from PostgreSQL
+        query = (
+            db.query(
+                Event.id.label("event_id"),
+                Event.name.label("event_name"),
+                Event.event_date,
+                Event.created_at,
+                User.name.label("organizer_name"),
+                Event.status.label("status"),
+                Event.slot.label("slot")
+            )
+            .join(User, Event.user_id == User.id)
+        )
+
+        # Filter by date
+        if date_type:
+            date_column = Event.created_at if date_type == "booked_date" else Event.event_date
+            if start_date and end_date:
+                query = query.filter(and_(date_column >= start_date, date_column <= end_date))
+            elif start_date:
+                query = query.filter(date_column >= start_date)
+            elif end_date:
+                query = query.filter(date_column <= end_date)
+
+        # Filter by slot
+        if slot:
+            query = query.filter(Event.slot == slot)
+
+        # Filter by status
+        if status:
+            query = query.filter(Event.status == status)
+
+        events = query.all()
+
+        # Step 2: Fetch facility data from MongoDB
+        mongo_data = {}
+
+        # Get all event_ids
+        event_ids = [e.event_id for e in events]
+
+        # Find all matching documents in MongoDB
+        cursor = col.find({"event_id": {"$in": event_ids}})
+
+        # Store them in a dictionary by event_id
+        async for doc in cursor:
+            event_id = doc.get("event_id")
+            mongo_data[event_id] = doc
+
+
+        # Step 3: Combine data + apply search
+        response = []
+        search_lower = search.lower() if search else None
+
+        for e in events:
+            mongo_entry = mongo_data.get(e.event_id)
+
+            # 🔍 Simplified search logic
+            if search_lower:
+                combined_text = ""
+                if mongo_entry:
+                    text_parts = []
+                    for section in ["venue", "band", "decoration", "snacks"]:
+                        data = mongo_entry.get(section)
+                        if data:
+                            for value in data.values():
+                                if value:
+                                    text_parts.append(str(value).lower())
+                    combined_text = " ".join(text_parts)
+
+                if (
+                    search_lower not in combined_text
+                    and search_lower not in e.event_name.lower()
+                    and search_lower not in e.organizer_name.lower()
+                    and search_lower not in str(e.status).lower()
+                ):
+                    continue
+
+            # ✅ Combine both SQL + Mongo data
+            data = {
+                "event_id": e.event_id,
+                "event_name": e.event_name,
+                "organizer_name": e.organizer_name,
+                "event_date": e.event_date.isoformat() if isinstance(e.event_date, date) else e.event_date,
+                "booked_date": e.created_at.isoformat() if isinstance(e.created_at, date) else e.created_at,
+                "status": getattr(e.status, "value", e.status),
+                "slot": e.slot,
+            }
+
+            if mongo_entry:
+                for key in ["venue", "band", "decoration", "snacks"]:
+                    if mongo_entry.get(key):
+                        data[key] = mongo_entry[key]
+
+            response.append(data)
+
+        return response
+
 event_service = EventService()  
 
        

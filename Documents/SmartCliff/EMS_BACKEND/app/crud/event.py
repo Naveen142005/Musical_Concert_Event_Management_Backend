@@ -6,12 +6,13 @@ from pytest import Session
 from sqlalchemy import and_, null
 
 from app.dependencies import db
-from app.models.enum import PaymentStatus
+from app.models.enum import FacilityStatus, PaymentMode, PaymentStatus
 from app.models.events import Event, EventStatusHistory
+from app.models.facilities import Bands, Decorations, Venues
 from app.models.facilities_selected import FacilitiesSelected
 
-from app.models.payment import Payment
-from app.models.refund import Refund
+from app.models.payment import Payment, PaymentStatusHistory
+from app.models.refund import Refund, RefundStatusHistory
 from app.models.tickets import Tickets
 from app.schemas.event import EventBase
 from app.services.facility import facility_service
@@ -33,6 +34,28 @@ class EventCRUD:
             ("decoration", event_data.decoration_id)
            
         ]
+        
+        facilities = {
+            "Venue": (Venues, event_data.venue_id),
+            "Band": (Bands, event_data.band_id),
+            "Decoration": (Decorations, event_data.decoration_id),
+       
+        }
+
+        for name, (model, fid) in facilities.items():
+            if fid:
+                facility = db.query(model).filter(model.id == fid).first()
+                if not facility:
+                    raise HTTPException(
+                        status_code=404,
+                        detail=f"{name} with ID {fid} does not exist."
+                    )
+                if facility.status and facility.status != FacilityStatus.AVAILABLE:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"{name} with ID {fid} is not available (status: {facility.status.value})."
+                    )
+        
 
         for name, fid in checks:
             if fid and fid != 0:
@@ -53,7 +76,7 @@ class EventCRUD:
         event= insert_data_flush(
             db,
             Event,
-            user_id=1,
+            user_id=7,
             name=event_data.event_name,
             description=event_data.description,
             slot=event_data.slot,
@@ -83,8 +106,15 @@ class EventCRUD:
             db,
             EventStatusHistory,
             event_id= event.id,
-            status = EventStatus.BOOKED,
-            date=datetime.utcnow()
+            status = EventStatus.BOOKED
+            
+        )
+        
+        insert_data(
+            db,
+            PaymentStatusHistory,
+            payment_id = payment.id,
+            status = PaymentStatus.COMPLETED if isFullPayment else PaymentStatus.PENDING
         )
         
         inserted_id = await facility_service.add_facilities(event_data, db, event.id)
@@ -134,8 +164,7 @@ class EventCRUD:
             db, 
             EventStatusHistory, 
             event_id= event_id,
-            status = EventStatus.RESCHEDULED,
-            date=datetime.now().date()
+            status = EventStatus.RESCHEDULED
         )
         
         commit(db)
@@ -163,8 +192,7 @@ class EventCRUD:
             db, 
             EventStatusHistory, 
             event_id= event_id,
-            status = EventStatus.CANCELLED,
-            date=datetime.now().date()
+            status = EventStatus.CANCELLED
         )
         
         payment_data: Payment = get_row(db, Payment, event_id = event_id, user_id = user_id)
@@ -176,18 +204,30 @@ class EventCRUD:
             status = PaymentStatus.REFUND_INITIATED
         )
         
+        insert_data(
+            db,
+            PaymentStatusHistory,
+            payment_id = payment_data.id,
+            status = PaymentStatus.REFUND_INITIATED
+        )
+        
         event_date = get_row(db, Event, id = event_id).event_date
         
         refund_amount = payment_service.calculate_refund(payment_data.payment_amount,event_date)
         
-        print (refund_amount)
-        insert_data(
+      
+        refund_data = insert_data_flush(
             db,
             Refund,
             payment_id = payment_data.id,
             refund_reason = reason,
-            refund_date = datetime.utcnow(),
             refund_amount = refund_amount
+        )
+        
+        insert_data(
+            db,
+            RefundStatusHistory,
+            refund_id = refund_data.id,
         )
         
         payment_service.refund_to_booked_audience(event_id, "Cancelled by the booked Organizer:" + reason,db)
@@ -195,40 +235,51 @@ class EventCRUD:
         commit(db)
         
         
-        # Should give refund to all the booked audience.
+        # Should give refund to all the booked audience. (DONE)
         
         return f"{event_id } is  cancelled Successfully"
     
-    def pay_pending_amount(self, event_id: int, user_id: int, db: Session):
+    def pay_pending_amount(self, event_id: int, user_id: int, payment_mode, db: Session):
         query = (
             db.query(Event, Payment)
             .join(Payment, Event.id == Payment.event_id)
             .filter(
-                and_(Payment.status == PaymentStatus.PENDING, Event.user_id == user_id)
+                and_(Payment.status == PaymentStatus.PENDING, Payment.user_id == user_id, event_id == Payment.event_id)
             )
         ).all()
+        print(len(query))
         
         if not query:
-            raise HTTPException(status_code=404, detail="Event not found in pending List")    
-        if len(query) >=2 :
             raise HTTPException(status_code=404, detail="Full Payment already paids")
+        
         update_data(db, Event, Event.id == event_id, total_amount = Event.total_amount * 2)   
         
         query = query[0]
         
-        payment = insert_data(
+        db.query(Payment).filter(
+            Payment.user_id == user_id,
+            Payment.event_id == event_id
+        ).update({
+            Payment.payment_amount: Payment.payment_amount * 2,
+            Payment.payment_mode: payment_mode.value,
+            Payment.status: PaymentStatus.COMPLETED
+        })
+        
+        payment_data = db.query(Payment).filter(
+            Payment.user_id == user_id,
+            Payment.event_id == event_id
+        ).first()
+        
+        insert_data(
             db,
-            Payment,
-            user_id = user_id,
-            event_id = event_id,
-            payment_amount = query.Event.total_amount,
-            payment_mode = query.Payment.payment_mode,
-            status = PaymentStatus.COMPLETED 
+            PaymentStatusHistory,
+            payment_id = payment_data.id,
+            status = PaymentStatus.COMPLETED
         )
         
         commit(db)
         
-        return payment
+        return "SUCCESS"
     
 event = EventCRUD()
 event_crud = EventCRUD()
