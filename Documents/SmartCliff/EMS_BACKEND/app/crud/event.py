@@ -14,6 +14,7 @@ from app.models.facilities_selected import FacilitiesSelected
 from app.models.payment import Payment, PaymentStatusHistory
 from app.models.refund import Refund, RefundStatusHistory
 from app.models.tickets import Tickets
+from app.routers.websocket import notify_admins
 from app.schemas.event import EventBase
 from app.services.facility import facility_service
 from app.utils.common import commit, create_error, delete_data, get_row, get_rows, insert_data, insert_data_flush, model_dumb, update_data
@@ -124,6 +125,14 @@ class EventCRUD:
               
         commit(db)
         
+        await notify_admins({
+            "event_id": event.id,
+            "action": "created",
+            "user_id": event.user_id,
+            "event_name": event.name,
+            "timestamp": datetime.now().isoformat()
+        })
+        
         return event_service.build_event_response(event_data, event.id, user_id=1, payment_id=payment.id, total_amount= total_amount, paid_amount=paying_amount)
     
     async def reshedule_event(self,event_id: int, reshedule_date, ticket_opening_date, slot:str ,db: Session):
@@ -141,6 +150,7 @@ class EventCRUD:
             
         dates = await event_service.get_possible_reschedule_dates(event_id, reshedule_date, reshedule_date,slot, db)
        
+        
         
         available_dates = [date.fromisoformat(d) for d in dates["available_dates"]]
         
@@ -169,9 +179,17 @@ class EventCRUD:
         
         commit(db)
         
+        await notify_admins({
+            "event_id": event_id,
+            "action": "rescheduled",
+            "old_date": str(data.event_date),
+            "new_date": str(reshedule_date),
+            "timestamp": datetime.now().isoformat()
+        })
+        
         return {"Updated_data": updated_data, "mes": "Success"}
         
-    def cancel_event(self, event_id: int, db: Session, reason: str, user_id: int): 
+    async def cancel_event(self, event_id: int, db: Session, reason: str, user_id: int): 
         if event_id <= 0:
             create_error('Provide valid event Id')
         data = get_row(db, Event, id= event_id)
@@ -234,12 +252,19 @@ class EventCRUD:
         
         commit(db)
         
+        await notify_admins({
+            "event_id": event_id,
+            "action": "cancelled",
+            "reason": reason,
+            "timestamp": datetime.now().isoformat()
+        })
+        
         
         # Should give refund to all the booked audience. (DONE)
         
         return f"{event_id } is  cancelled Successfully"
     
-    def pay_pending_amount(self, event_id: int, user_id: int, payment_mode, db: Session):
+    async def pay_pending_amount(self, event_id: int, user_id: int, payment_mode, db: Session):
         query = (
             db.query(Event, Payment)
             .join(Payment, Event.id == Payment.event_id)
@@ -255,6 +280,7 @@ class EventCRUD:
         update_data(db, Event, Event.id == event_id, total_amount = Event.total_amount * 2)   
         
         query = query[0]
+        amount = query.Payment.payment_amount
         
         db.query(Payment).filter(
             Payment.user_id == user_id,
@@ -278,6 +304,14 @@ class EventCRUD:
         )
         
         commit(db)
+        
+        await notify_admins({
+            "event_id": event_id,
+            "action": "pending_payment paid",
+            "user_id": user_id,
+            "amount": amount,
+            "timestamp": datetime.now().isoformat()
+        })
         
         return "SUCCESS"
     

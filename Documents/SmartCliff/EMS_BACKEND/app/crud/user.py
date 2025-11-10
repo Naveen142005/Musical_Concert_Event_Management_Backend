@@ -40,15 +40,6 @@ class UserCRUD:
   
    #---------------------------Login User------------------------# 
     
-    def login_user(self, db: Session, curr_user: LoginUser):
-        user_db = db.query(User).filter(User.email == curr_user.email).first()
-
-        if not user_db:
-            raise HTTPException(status_code=400, detail="Invaild Email")
-        
-        if not pwd_context.verify(curr_user.password, user_db.password):
-            raise HTTPException(status_code=400, detail="Invalid password")
-  
-        return db.query(User).filter(User.email == curr_user.email).first().name
+    
         
 user_crud = UserCRUD()

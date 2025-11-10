@@ -56,9 +56,10 @@ async def get_my_bookings(db:Session = Depends(db.get_db)):
  
 
 @router.post('/pay_pending_amount/{event_id}')
-def pay_pending_amount (event_id:int, payment_mode: PaymentMode =  Query(PaymentMode.UPI, description="Payment mode"), db: Session = Depends(db.get_db)):
+async def pay_pending_amount (event_id:int, payment_mode: PaymentMode =  Query(PaymentMode.UPI, description="Payment mode"), db: Session = Depends(db.get_db)):
     user_id = 1 # fetch from cookie 
-    return event_crud.pay_pending_amount(event_id, user_id,payment_mode, db)
+    print("helo")
+    return await event_crud.pay_pending_amount(event_id, user_id,payment_mode, db)
 
 
 
@@ -123,13 +124,13 @@ async def reschedule_event(
     return res
 
 @router.post("/event_cancel/{event_id}")
-def cancel_event(
+async def cancel_event(
     event_id: int,
     body: CancelEventRequest,
     db: Session = Depends(db.get_db)
 ):
     user_id = 1 # Fetch from cookine
-    return event_crud.cancel_event(event_id, db, body.reason, user_id)
+    return await event_crud.cancel_event(event_id, db, body.reason, user_id)
 
 
 @router.get("/booked-events")

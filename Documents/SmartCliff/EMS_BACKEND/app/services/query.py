@@ -53,5 +53,5 @@ class QueryService:
             raise HTTPException(status_code=404, detail="Query not found")
         return query_obj
 
-# Instantiate
+
 query_service = QueryService()

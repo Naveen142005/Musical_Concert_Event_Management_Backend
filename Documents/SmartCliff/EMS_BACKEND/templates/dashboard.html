@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Admin Dashboard</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      #feed {
+        border: 1px solid #ccc;
+        padding: 20px;
+        width: 600px;
+        height: 600px;
+        overflow-y: scroll;
+      }
+      .event {
+        margin-bottom: 15px;
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        border-radius: 5px;
+      }
+      .created {
+        background-color: #e0ffe0;
+      }
+      .cancelled {
+        background-color: #ffe0e0;
+      }
+      .rescheduled {
+        background-color: #fff0b3;
+      }
+      .pending_payment {
+        background-color: #e0f0ff;
+      }
+      .event a {
+        text-decoration: none;
+        color: blue;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Admin Live Activity Feed</h2>
+    <div id="feed"></div>
+
+    <script>
+  
+      const ws = new WebSocket("ws://localhost:8000/ws/admin");
+      const feed = document.getElementById("feed");
+
+      function addFeedItem(data) {
+        const div = document.createElement("div");
+        div.className = "event " + data.action;
+
+        let details = "";
+        if (data.action === "created") {
+          details = `<strong>Event Name:</strong> ${data.event_name}<br>
+                   <strong>User ID:</strong> ${data.user_id}`;
+        } else if (data.action === "cancelled") {
+          details = `<strong>Reason:</strong> ${data.reason}`;
+        } else if (data.action === "rescheduled") {
+          details = `<strong>Old Date:</strong> ${data.old_date}<br>
+                   <strong>New Date:</strong> ${data.new_date}`;
+        } else if (data.action === "pending_payment") {
+          details = `<strong>User ID:</strong> ${data.user_id}<br>
+                   <strong>Amount:</strong> ${data.amount}`;
+        }
+
+        div.innerHTML = `<strong>Event ID:</strong> ${data.event_id} <br>
+                     <strong>Action:</strong> ${data.action} <br>
+                     ${details} <br>
+                     <small>${data.timestamp}</small>`;
+        feed.prepend(div); 
+      }
+
+      ws.onmessage = function (event) {
+        const data = JSON.parse(event.data);
+        addFeedItem(data);
+      };
+    </script>
+  </body>
+</html>

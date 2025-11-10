@@ -1,22 +1,30 @@
-from datetime import timedelta, datetime
-from jose import JWTError
-import jwt
+from datetime import datetime, timedelta
+from jose import jwt,JWTError
+from fastapi import HTTPException, status
+from typing import Optional
+from app.config import settings
 
-secret_key= "This is my super powerfull secret_key. No one can find it...."
-ALGORITHM = 'HS256'
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + (
+        expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return encoded_jwt
 
-def create_access_token(data: dict):
-    encode = data.copy()
-    expire_time = datetime.utcnow() + timedelta(minutes= ACCESS_TOKEN_EXPIRE_MINUTES)
-    encode.update({'exp': expire_time})
-    token = jwt.encode(encode, secret_key, algorithm= ALGORITHM)
-    return token
-    
-def verify_access_token(token: str):
+def create_refresh_token(data: dict):
+    expire = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    to_encode = data.copy()
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return encoded_jwt
+
+def verify_token(token: str):
     try:
-        payload = jwt.decode(token, secret_key, algorithms=ALGORITHM)
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         return payload
-    except Exception as e:
-        return e
-    
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token"
+        )
