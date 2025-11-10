@@ -3,6 +3,7 @@ from fastapi import APIRouter, Form, HTTPException, Depends, Query, Request
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
+from app.auth.auth_utils import role_requires
 from app.dependencies import db
 
 from app.models.feedback import Feedback
@@ -14,10 +15,14 @@ router = APIRouter()
 templates = Jinja2Templates(directory="templates") 
 
 @router.post("/send-feedback")
-async def send_feedback_test(event_id: int, user_type:str, user_id: int, db: Session = Depends(db.get_db)):
-
+async def send_feedback_test(id: int,  user_id: int, db: Session = Depends(db.get_db)):
+    """
+                Id can be either Event id or Booking Id\n
+                Event id -> To send feedback link to organizer\n
+                Booking id -> To send feedback link to audience
+    """
     try:
-        result = await feedback_service.send_feedback(event_id, user_type, user_id, db)
+        result = await feedback_service.send_feedback(id, user_id, db)
         return result
     except HTTPException as he:
         raise he
@@ -72,3 +77,9 @@ async def mark_feedback_read(feedback_id: int, db: Session = Depends(db.get_db))
 @router.delete("/{feedback_id}")
 async def delete_feedback(feedback_id: int, db: Session = Depends(db.get_db)):
     return feedback_service.delete_feedback(db=db, feedback_id=feedback_id)
+
+@router.get("/get_feedback/{event_id}")
+def get_my_event_feedback (event_id: int, db: Session = Depends(db.get_db), current_user: dict = Depends(role_requires("Organizer"))):
+    user_id = current_user["id"]
+    return feedback_service.get_my_event_feedback(event_id, user_id, db)
+    

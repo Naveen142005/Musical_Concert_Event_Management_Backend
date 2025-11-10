@@ -1,11 +1,12 @@
-from sqlalchemy import Column, Integer, String, Float, ARRAY, Enum as SqlEnum
+from sqlalchemy import Column, Integer, String, Float, ARRAY
 from sqlalchemy.orm import relationship
 from app.database.connection import Base
 from app.models.enum import FacilityStatus
+from sqlalchemy import Enum as SqlEnum
 
 
 # ========================
-#  Venue Table
+#  Venues Table
 # ========================
 class Venues(Base):
     __tablename__ = "venues"
@@ -16,6 +17,7 @@ class Venues(Base):
     capacity = Column(Integer)
     price = Column(Float)
     status = Column(SqlEnum(FacilityStatus), default=FacilityStatus.AVAILABLE)
+    image_path = Column(String(500), nullable=True)
 
 
 # ========================
@@ -30,6 +32,7 @@ class Bands(Base):
     member_count = Column(Integer)
     price = Column(Float)
     status = Column(SqlEnum(FacilityStatus), default=FacilityStatus.AVAILABLE)
+    image_path = Column(String(500), nullable=True)
 
 
 # ========================
@@ -43,10 +46,11 @@ class Decorations(Base):
     type = Column(String)
     price = Column(Float)
     status = Column(SqlEnum(FacilityStatus), default=FacilityStatus.AVAILABLE)
+    image_path = Column(String(500), nullable=True)
 
 
 # ========================
-#  Booked Snacks Table
+#   Snacks Table
 # ========================
 class Snacks(Base):
     __tablename__ = "snacks"
@@ -54,3 +58,4 @@ class Snacks(Base):
     id = Column(Integer, primary_key=True, index=True)
     snacks = Column(ARRAY(String))
     price = Column(Float)
+    image_path = Column(String(500), nullable=True)

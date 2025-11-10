@@ -10,6 +10,9 @@ from app.routers import events
 from app.routers import booking,payments
 from app.routers import feedback
 from app.routers import query
+from app.routers import content_management
+from app.routers import dashboard
+
 application = FastAPI() 
 templates = Jinja2Templates(directory="templates") 
 
@@ -23,10 +26,7 @@ application.include_router(query.router)
 application.include_router(query.router_)
 application.include_router(test.router)
 application.include_router(websocket.router)
+application.include_router(content_management.router, prefix="/contents", tags=["Content Management"])
 
-@application.get("/dashboard")
-async def dashboard():
-    file_path = os.path.join(os.getcwd(), "templates", "dashboard.html")
-    with open(file_path, "r", encoding="utf-8") as f:
-        html_content = f.read()
-    return HTMLResponse(content= html_content)
+application.include_router(dashboard.router)
+

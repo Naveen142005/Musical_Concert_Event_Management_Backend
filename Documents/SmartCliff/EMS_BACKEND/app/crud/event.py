@@ -10,21 +10,22 @@ from app.models.enum import FacilityStatus, PaymentMode, PaymentStatus
 from app.models.events import Event, EventStatusHistory
 from app.models.facilities import Bands, Decorations, Venues
 from app.models.facilities_selected import FacilitiesSelected
-
+from app.database.connection_mongo import col
 from app.models.payment import Payment, PaymentStatusHistory
 from app.models.refund import Refund, RefundStatusHistory
 from app.models.tickets import Tickets
+from app.models.user import User
 from app.routers.websocket import notify_admins
 from app.schemas.event import EventBase
 from app.services.facility import facility_service
-from app.utils.common import commit, create_error, delete_data, get_row, get_rows, insert_data, insert_data_flush, model_dumb, update_data
+from app.utils.common import commit, create_error, delete_data, get_row, get_rows, insert_data, insert_data_flush, log_activity, model_dumb, update_data
 from app.services.events import event_service
 from app.services.ticket import ticket_service
 from app.services.payment import payment_service
 from app.models.enum import EventStatus
 
 class EventCRUD:
-    async def create_new_event(self, event_data:EventBase,  db:Session = Depends(db.get_db)):
+    async def create_new_event(self, event_data:EventBase,  user_id:int ,db:Session = Depends(db.get_db)):
         event_date = event_data.event_date
         slot = event_data.slot
 
@@ -77,7 +78,7 @@ class EventCRUD:
         event= insert_data_flush(
             db,
             Event,
-            user_id=7,
+            user_id=user_id,
             name=event_data.event_name,
             description=event_data.description,
             slot=event_data.slot,
@@ -132,10 +133,75 @@ class EventCRUD:
             "event_name": event.name,
             "timestamp": datetime.now().isoformat()
         })
+        user_data = get_row(db, User, id=user_id)
         
-        return event_service.build_event_response(event_data, event.id, user_id=1, payment_id=payment.id, total_amount= total_amount, paid_amount=paying_amount)
+        user_data = get_row(db, User, id=user_id)
     
-    async def reshedule_event(self,event_id: int, reshedule_date, ticket_opening_date, slot:str ,db: Session):
+    # Get facility details from MongoDB
+        facility_doc = await col.find_one({"event_id": event.id})
+        
+        # Prepare ticket details
+        tickets = []
+        if event_data.ticket_enabled:
+            if event_data.platinum_ticket_count:
+                tickets.append({
+                    "type": "Platinum",
+                    "price": event_data.platinum_ticket_price,
+                    "count": event_data.platinum_ticket_count
+                })
+            if event_data.gold_ticket_count:
+                tickets.append({
+                    "type": "Gold",
+                    "price": event_data.gold_ticket_price,
+                    "count": event_data.gold_ticket_count
+                })
+            if event_data.silver_ticket_count:
+                tickets.append({
+                    "type": "Silver",
+                    "price": event_data.silver_ticket_price,
+                    "count": event_data.silver_ticket_count
+                })
+        
+        # Generate Invoice
+        from app.utils.invoice_generator import generate_event_invoice
+        
+        invoice_path = generate_event_invoice(
+            invoice_number=f"INV{event.id:06d}",
+            event_id=event.id,
+            event_name=event.name,
+            event_date=event.event_date.strftime('%d %b %Y'),
+            slot=event.slot,
+            customer_name=user_data.name,
+            customer_email=user_data.email,
+            customer_phone=str(user_data.phone),
+            venue_data=facility_doc.get('venue') if facility_doc else None,
+            band_data=facility_doc.get('band') if facility_doc else None,
+            decoration_data=facility_doc.get('decoration') if facility_doc else None,
+            snacks_data=facility_doc.get('snacks') if facility_doc else None,
+            snacks_count=event_data.snacks_count or 0,
+            ticket_details=tickets if tickets else None,
+            total_amount=total_amount,
+            paid_amount=paying_amount,
+            payment_type=event_data.payment_type
+        )
+        
+        
+        log_activity(
+            db=db,
+            user_id=user_id,
+            activity_type="Event Created",
+            title="New Event Created.",
+            description=f"{user_data.name} Created new event {event.name}.",
+            event_id=event.id,
+            status="Booked",
+            amount=paying_amount
+        )
+        
+        response =  event_service.build_event_response(event_data, event.id, user_id=1, payment_id=payment.id, total_amount= total_amount, paid_amount=paying_amount)
+        response["invoice_path"] = invoice_path
+        return response
+    
+    async def reshedule_event(self,event_id: int, user_id: int ,reshedule_date, ticket_opening_date, slot:str ,db: Session):
         
         if event_id <= 0:
             create_error('Provide valid event Id')
@@ -187,6 +253,21 @@ class EventCRUD:
             "timestamp": datetime.now().isoformat()
         })
         
+        user_data = get_row(db, User, id=user_id)
+        
+        log_activity(
+            db=db,
+            user_id=user_id,
+            activity_type="Event rescheduling",
+            title="A Event rescheduled.",
+            description=f"{user_data.name} rescheduling the {data.name} event on {str(reshedule_date)}.",
+            event_id=event_id,
+            status="rescheduled",
+            
+        )
+        
+        
+        
         return {"Updated_data": updated_data, "mes": "Success"}
         
     async def cancel_event(self, event_id: int, db: Session, reason: str, user_id: int): 
@@ -229,7 +310,8 @@ class EventCRUD:
             status = PaymentStatus.REFUND_INITIATED
         )
         
-        event_date = get_row(db, Event, id = event_id).event_date
+        event_data = get_row(db, Event, id = event_id)
+        event_date = event_data.event_date
         
         refund_amount = payment_service.calculate_refund(payment_data.payment_amount,event_date)
         
@@ -258,6 +340,18 @@ class EventCRUD:
             "reason": reason,
             "timestamp": datetime.now().isoformat()
         })
+        
+        user_data = get_row(db, User, id=user_id)
+        
+        log_activity(
+            db=db,
+            user_id=user_id,
+            activity_type="Event Cancelled",
+            title="The Event Cancelled.",
+            description=f"{user_data.name} Cancelled a event {event_data.name}.",
+            event_id=event_id,
+            status="Cancelled",
+        )
         
         
         # Should give refund to all the booked audience. (DONE)
@@ -312,6 +406,19 @@ class EventCRUD:
             "amount": amount,
             "timestamp": datetime.now().isoformat()
         })
+        
+        user_data = get_row(db, User, id=user_id)
+        
+        log_activity(
+            db=db,
+            user_id=user_id,
+            activity_type="paying",
+            title="Paying pending amount.",
+            description=f"{user_data.name} paid the pending amount {amount} for {query.Event.name}.",
+            event_id=event_id,
+            status="Cancelled",
+        )
+        
         
         return "SUCCESS"
     

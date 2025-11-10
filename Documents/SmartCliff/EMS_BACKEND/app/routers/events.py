@@ -24,7 +24,8 @@ router = APIRouter()
 @router.post('/create_new_event', response_model=EventResponse)
 async def create_new_event(event_data:EventBase,  db:Session = Depends(db.get_db)):
     new_event = EventBase(**event_data.model_dump())
-    return await event.create_new_event(event_data, db)
+    user_id = 8
+    return await event.create_new_event(event_data, user_id,db)
     
     
 @router.get("/events/{event_id}")
@@ -117,9 +118,9 @@ async def reschedule_event(
     body: RescheduleEventRequest,
     db: Session = Depends(db.get_db)
 ):
-    
+    #user id... see
     res = await event_crud.reshedule_event(
-        body.event_id, body.excepted_date, body.ticket_opening_date, body.slot,db
+        body.event_id, 8, body.excepted_date, body.ticket_opening_date, body.slot,db
     )
     return res
 
@@ -161,3 +162,12 @@ async def get_booked_events(
         raise HTTPException(status_code=404, detail="No events found")
 
     return events
+
+
+# 
+
+
+@router.get("/download/{event_id}")
+def download_invoice(event_id: int, db_session: Session = Depends(db.get_db)):
+    """Download invoice PDF for an event"""
+    return event_service.get_invoice(event_id, db)

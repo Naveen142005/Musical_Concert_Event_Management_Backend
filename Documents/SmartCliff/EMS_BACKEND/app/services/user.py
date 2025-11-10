@@ -28,7 +28,7 @@ class UserService:
 
         # Prepare data for token
         user_data = {
-            "user_id": user_db.id,
+            "id": user_db.id,
             "email": user_db.email,
             "role": role_name
         }

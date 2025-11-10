@@ -1,10 +1,13 @@
 
 
 from datetime import date
+import os
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import FileResponse
 from pytest import Session
 from app.dependencies import db
+from app.models.bookings import Bookings
 from app.models.enum import BookingStatus, DateType, SlotEnum
 from app.models.events import Event
 from app.schemas.booking import BookingCreate, BookingResponse
@@ -31,11 +34,11 @@ def get_available_tickets(event_id: int, db: Session = Depends(db.get_db)):
     return result
 
 @router.post("/book_event/", response_model=BookingResponse)
-def book_event(booking_data: BookingCreate, db: Session = Depends(db.get_db)):
+async def book_event(booking_data: BookingCreate, db: Session = Depends(db.get_db)):
     if booking_data.event_id not in booking_service.get_pubilc_event_id(db):
         raise HTTPException(status_code=404, detail="This event is private event.")
     user_id = 8
-    return booking_crud.create_booking(db, booking_data, user_id)    
+    return await booking_crud.create_booking(db, booking_data, user_id)    
 
 @router.get('/upcoming_bookings')
 def get_upcoming_bookings(db: Session = Depends(db.get_db)):
@@ -49,14 +52,14 @@ def get_upcoming_bookings(db: Session = Depends(db.get_db)):
 
 
 @router.post("/booking_cancel/{Booking_id}")
-def cancel_event(
+def cancel_booking(
     booking_id: int,
     body: CancelEventRequest,
     db: Session = Depends(db.get_db)
 ):
     user_id = 2
     
-    return booking_crud.cancel_event(booking_id, db, body.reason, user_id)
+    return booking_crud.cancel_booking(booking_id, db, body.reason, user_id)
 
 
 @router.get("/events/search")
@@ -119,3 +122,24 @@ def get_all_bookings(
         sort_by=sort_by,
     )
     return result
+
+
+@router.get("/download/{booking_id}")
+def download_ticket(booking_id: int, db_session: Session = Depends(db.get_db)):
+    """Download ticket PDF"""
+    
+    booking = get_row(db_session, Bookings, id=booking_id)
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    ticket_number = f"TKT{booking_id:06d}"
+    ticket_path = f"tickets/ticket_{ticket_number}.pdf"
+    
+    if not os.path.exists(ticket_path):
+        raise HTTPException(status_code=404, detail="Ticket not found")
+    
+    return FileResponse(
+        path=ticket_path,
+        media_type="application/pdf",
+        filename=f"Thigalzhi_Ticket_{booking_id}.pdf"
+    )

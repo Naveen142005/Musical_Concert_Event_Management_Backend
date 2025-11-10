@@ -7,16 +7,17 @@ from app.models.events import Event
 from app.models.payment import Payment, PaymentStatusHistory
 from app.models.refund import Refund, RefundStatusHistory
 from app.models.tickets import Tickets
-
+from app.database.connection_mongo import col
+from app.models.user import User
 from app.routers import booking
 from app.schemas.booking import BookingCreate
 from app.models.enum import BookingStatus, EventStatus, PaymentStatus
-from app.utils.common import commit, create_error, get_row, get_rows, insert_data, insert_data_flush, update_data
+from app.utils.common import commit, create_error, get_row, get_rows, insert_data, insert_data_flush, log_activity, update_data
 from fastapi import HTTPException, status
 
 
 class BookingCRUD:
-    def create_booking(_, db: Session, booking_data: BookingCreate,user_id):
+    async def create_booking(_, db: Session, booking_data: BookingCreate,user_id):
         try:
             if not get_row(db, Event, id = booking_data.event_id):
                 raise HTTPException(status_code=404, message ='Event data not Found')
@@ -138,6 +139,46 @@ class BookingCRUD:
             
 
             commit(db)
+            
+            
+            user = get_row(db, User, id=user_id)
+            event = get_row(db, Event, id=booking_data.event_id)
+            
+            # Get venue from MongoDB
+            facility_doc = await col.find_one({"event_id": booking_data.event_id})
+            venue_name = facility_doc.get('venue', {}).get('name', 'N/A') if facility_doc else 'N/A'
+            
+            # Generate Ticket PDF
+            from app.utils.ticket_generator import generate_booking_ticket
+            
+            ticket_path = generate_booking_ticket(
+                booking_id=booking.id,
+                event_id=booking_data.event_id,
+                event_name=event.name,
+                event_date=event.event_date.strftime('%d %b %Y'),
+                slot=event.slot,
+                venue_name=venue_name,
+                customer_name=user.name,
+                customer_email=user.email,
+                customer_phone=str(user.phone),
+                ticket_details=ticket_details,
+                total_tickets=total_tickets,
+                total_amount=total_amount
+            )
+            
+            # Log activity
+            log_activity(
+                db=db,
+                user_id=user_id,
+                activity_type="Ticket Booked",
+                title="New Ticket Booking",
+                description=f"{user.name} booked {total_tickets} tickets for {event.name}",
+                event_id=booking_data.event_id,
+                status="Confirmed",
+                amount=total_amount
+            )
+        
+            
 
             for td in ticket_details:
                 td["ticket_type"] = td["ticket_type"].capitalize()
@@ -158,7 +199,7 @@ class BookingCRUD:
             raise HTTPException(status_code=500, detail=f"Booking failed: {str(e)}")
 
         
-    def cancel_event(self, booking_id: int, db: Session, reason: str, user_id): 
+    def cancel_booking(self, booking_id: int, db: Session, reason: str, user_id): 
         if booking_id <= 0: 
             create_error('Provide valid event Id')
             

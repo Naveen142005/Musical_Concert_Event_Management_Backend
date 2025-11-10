@@ -38,8 +38,6 @@ class LoginUser(BaseModel):
 
 # ---------- Update Profile ----------
 class UserUpdate(BaseModel):
-    name: Optional[str]
-    phone: Optional[int]
     gender: Optional[str]
     dob: Optional[date]
     city: Optional[str]

@@ -1,7 +1,9 @@
 import os
 import uuid
 from datetime import date, datetime as dayTime, timedelta
+from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
+from fastapi.responses import FileResponse
 from pytest import Session
 from sqlalchemy import String, and_, cast, or_
 from app.models.enum import EventStatus, PaymentStatus
@@ -622,6 +624,26 @@ class EventService:
             response.append(data)
 
         return response
+    
+    def get_invoice(self, event_id:int, db:Session):
+        event = get_row(db, Event, id=event_id)
+        if not event:
+            raise HTTPException(status_code=404, detail="Event not found")
+        
+        # Build invoice path
+        invoice_number = f"INV{event_id:06d}"
+        invoice_path = f"invoices/invoice_{invoice_number}.pdf"
+        
+        # Check if invoice file exists
+        if not os.path.exists(invoice_path):
+            raise HTTPException(status_code=404, detail="Invoice not found. Please contact support.")
+        
+        # Return file for download
+        return FileResponse(
+            path=invoice_path,
+            media_type="application/pdf",
+            filename=f"Thigalzhi_Invoice_{event_id}.pdf"
+    )
 
 event_service = EventService()  
 

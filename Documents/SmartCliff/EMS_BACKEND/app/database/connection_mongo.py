@@ -8,8 +8,7 @@ client: AsyncIOMotorClient = AsyncIOMotorClient(
     serverSelectionTimeoutMS=5000
 )
 
-
-
 db = client['EMS']
 col = db['facility_selected_log']
+content = db["Content_Management"]
 

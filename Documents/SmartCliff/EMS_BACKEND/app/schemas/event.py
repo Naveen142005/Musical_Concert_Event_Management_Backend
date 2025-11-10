@@ -132,23 +132,28 @@ class EventBase(BaseModel):
     
     
 
-    @field_validator("ticket_open_date")
-    @classmethod
-    def validate_ticket_open_date(cls, ticket_open_date, info: ValidationInfo):
-        event_date = info.data.get("event_date")
-        today = date.today()
-    
-        if ticket_open_date is None or event_date is None:
-            return ticket_open_date
+    @model_validator(mode="after")
+    def validate_ticket_open_date(self):
+        is_ticket_enabled = self.ticket_enabled
+        print(is_ticket_enabled)
+        if is_ticket_enabled:
+            event_date = self.event_date
+            today = date.today()
+        
+            if self.event_date is None:
+               raise ValueError("Event date should be provide")
+            
+            if self.ticket_open_date is None:
+                raise ValueError("Ticketing opening date should be provide.")
 
-        if ticket_open_date < today:
-            raise ValueError("Ticket opening date cannot be before today.")
+            if self.ticket_open_date < today:
+                raise ValueError("Ticket opening date cannot be before today.")
 
-        if ticket_open_date >= event_date:
-            raise ValueError("Ticket opening date must be before the event date.")
+            if self.ticket_open_date >= event_date:
+                raise ValueError("Ticket opening date must be before the event date.")
 
-        return ticket_open_date
-    
+            return self
+        return self
 
 
 

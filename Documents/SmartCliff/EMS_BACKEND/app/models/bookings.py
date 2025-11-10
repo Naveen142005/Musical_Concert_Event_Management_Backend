@@ -7,7 +7,7 @@ from sqlalchemy import Column, Integer, String, Date, ForeignKey, Enum as SqlEnu
 from app.models.enum import BookingStatus
 from app.database.connection import Base
 
-
+# Audience Ticket Booking
 class Bookings(Base):
     __tablename__ = "bookings"
 
@@ -26,6 +26,7 @@ class Bookings(Base):
     payment = relationship("Payment", back_populates="bookings")
 
 
+# Booking's Ticket Details
 class BookingDetails(Base):
     __tablename__ = "booking_ticket_details"
 

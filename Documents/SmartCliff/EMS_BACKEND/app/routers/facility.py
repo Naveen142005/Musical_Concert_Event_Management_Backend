@@ -1,32 +1,27 @@
-from datetime import date, timedelta
+from datetime import date
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from app.models.enum import SlotEnum, SortOrder
 from app.services import facility
 from app.dependencies import db
-
-import enum
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from sqlalchemy.orm import Session
+from typing import Union
+from app.dependencies import db
+from app.schemas.facility import *
 from fastapi import APIRouter, Form, Query, UploadFile, File, Depends, HTTPException
-from typing import Optional, Literal
-from datetime import date, datetime
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
-from app.models.events import Event
-from app.models.facilities import Venues
-from app.schemas.event import EventBase, EventResponse, RescheduleEventRequest
 from app.models.enum import EventStatus, PaymentStatus, SlotEnum
 from app.dependencies import db
-from app.crud.event import event, event_crud
 from app.schemas.payment import CancelEventRequest
 from app.services.facility import facility_service
 from app.services.events import event_service
 from app.services.ticket import ticket_service
-from app.utils.common import commit, create_error, insert_data, update_data
-
+from app.utils.common import create_error
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-
-from app.crud import facility as crud
+from app.crud.facility import facility_curd
 from app.schemas.facility import (
     VenueBase, VenueResponse, VenueUpdate,
     BandBase, BandResponse, BandUpdate,
@@ -148,28 +143,48 @@ def get_booked_facility_events(
     return events
 
 
+
 # ========== VENUES ==========
 @router.post("/venues", response_model=VenueResponse)
-def create_venue(data: VenueBase, db: Session = Depends(db.get_db)):
-    return crud.create_facility(db, 1, data.dict())
+def create_venue(data: VenueBase, db_session: Session = Depends(db.get_db)):
+    return facility_curd.create_facility(db_session, 1, data.dict())
 
-@router.get("/venues/{venue_id}", response_model=VenueResponse)
-def get_venue(venue_id: int, db: Session = Depends(db.get_db)):
-    facility = crud.get_facility_by_id(db, 1, venue_id)
+
+@router.get("/venues", response_model=list)
+def get_all_venues(db_session: Session = Depends(db.get_db)):
+    return facility_curd.get_all_facilities(db_session, 1)
+
+
+@router.get("/venues/{venue_id}", response_model=dict)
+def get_venue(venue_id: int, db_session: Session = Depends(db.get_db)):
+    facility = facility_curd.get_facility_by_id(db_session, 1, venue_id)
     if not facility:
         raise HTTPException(404, "Venue not found")
     return facility
 
-@router.put("/venues/{venue_id}", response_model=VenueResponse)
-def update_venue(venue_id: int, data: VenueUpdate, db: Session = Depends(db.get_db)):
-    facility = crud.update_facility(db, 1, venue_id, data.dict(exclude_unset=True))
+
+@router.put("/venues/{venue_id}", response_model=dict)
+def update_venue(venue_id: int, data: VenueUpdate, db_session: Session = Depends(db.get_db)):
+    facility = facility_curd.update_facility(db_session, 1, venue_id, data.dict(exclude_unset=True))
     if not facility:
         raise HTTPException(404, "Venue not found")
     return facility
+
+
+@router.put("/venues/{venue_id}/image")
+async def update_venue_image(
+    venue_id: int,
+    image: Union[UploadFile, str, None] = File(...),
+    db_session: Session = Depends(db.get_db)
+):
+    """Update venue image"""
+   
+    return await facility_curd.update_facility_image(db_session, 1, venue_id, image=image)
+
 
 @router.delete("/venues/{venue_id}")
-def delete_venue(venue_id: int, db: Session = Depends(db.get_db)):
-    facility = crud.delete_facility(db, 1, venue_id)
+def delete_venue(venue_id: int, db_session: Session = Depends(db.get_db)):
+    facility = facility_curd.delete_facility(db_session, 1, venue_id)
     if not facility:
         raise HTTPException(404, "Venue not found")
     return {"message": "Venue deleted successfully"}
@@ -177,26 +192,46 @@ def delete_venue(venue_id: int, db: Session = Depends(db.get_db)):
 
 # ========== BANDS ==========
 @router.post("/bands", response_model=BandResponse)
-def create_band(data: BandBase, db: Session = Depends(db.get_db)):
-    return crud.create_facility(db, 2, data.dict())
+def create_band(data: BandBase, db_session: Session = Depends(db.get_db)):
+    return facility_curd.create_facility(db_session, 2, data.dict())
 
-@router.get("/bands/{band_id}", response_model=BandResponse)
-def get_band(band_id: int, db: Session = Depends(db.get_db)):
-    facility = crud.get_facility_by_id(db, 2, band_id)
+
+@router.get("/bands", response_model=list)
+def get_all_bands(db_session: Session = Depends(db.get_db)):
+    return facility_curd.get_all_facilities(db_session, 2)
+
+
+@router.get("/bands/{band_id}", response_model=dict)
+def get_band(band_id: int, db_session: Session = Depends(db.get_db)):
+    facility = facility_curd.get_facility_by_id(db_session, 2, band_id)
     if not facility:
         raise HTTPException(404, "Band not found")
     return facility
 
-@router.put("/bands/{band_id}", response_model=BandResponse)
-def update_band(band_id: int, data: BandUpdate, db: Session = Depends(db.get_db)):
-    facility = crud.update_facility(db, 2, band_id, data.dict(exclude_unset=True))
+
+@router.put("/bands/{band_id}", response_model=dict)
+def update_band(band_id: int, data: BandUpdate, db_session: Session = Depends(db.get_db)):
+    facility = facility_curd.update_facility(db_session, 2, band_id, data.dict(exclude_unset=True))
     if not facility:
         raise HTTPException(404, "Band not found")
     return facility
+
+
+@router.put("/bands/{band_id}/image")
+async def update_band_image(
+    band_id: int,
+    image: Union[UploadFile, str, None] = File(...),
+    db_session: Session = Depends(db.get_db)
+):
+    """Update band image"""
+    
+    
+    return await facility_curd.update_facility_image(db_session, 2, band_id, image=image)
+
 
 @router.delete("/bands/{band_id}")
-def delete_band(band_id: int, db: Session = Depends(db.get_db)):
-    facility = crud.delete_facility(db, 2, band_id)
+def delete_band(band_id: int, db_session: Session = Depends(db.get_db)):
+    facility = facility_curd.delete_facility(db_session, 2, band_id)
     if not facility:
         raise HTTPException(404, "Band not found")
     return {"message": "Band deleted successfully"}
@@ -204,26 +239,45 @@ def delete_band(band_id: int, db: Session = Depends(db.get_db)):
 
 # ========== DECORATIONS ==========
 @router.post("/decorations", response_model=DecorationResponse)
-def create_decoration(data: DecorationBase, db: Session = Depends(db.get_db)):
-    return crud.create_facility(db, 3, data.dict())
+def create_decoration(data: DecorationBase, db_session: Session = Depends(db.get_db)):
+    return facility_curd.create_facility(db_session, 3, data.dict())
 
-@router.get("/decorations/{decoration_id}", response_model=DecorationResponse)
-def get_decoration(decoration_id: int, db: Session = Depends(db.get_db)):
-    facility = crud.get_facility_by_id(db, 3, decoration_id)
+
+@router.get("/decorations", response_model=list)
+def get_all_decorations(db_session: Session = Depends(db.get_db)):
+    return facility_curd.get_all_facilities(db_session, 3)
+
+
+@router.get("/decorations/{decoration_id}", response_model=dict)
+def get_decoration(decoration_id: int, db_session: Session = Depends(db.get_db)):
+    facility = facility_curd.get_facility_by_id(db_session, 3, decoration_id)
     if not facility:
         raise HTTPException(404, "Decoration not found")
     return facility
 
-@router.put("/decorations/{decoration_id}", response_model=DecorationResponse)
-def update_decoration(decoration_id: int, data: DecorationUpdate, db: Session = Depends(db.get_db)):
-    facility = crud.update_facility(db, 3, decoration_id, data.dict(exclude_unset=True))
+
+@router.put("/decorations/{decoration_id}", response_model=dict)
+def update_decoration(decoration_id: int, data: DecorationUpdate, db_session: Session = Depends(db.get_db)):
+    facility = facility_curd.update_facility(db_session, 3, decoration_id, data.dict(exclude_unset=True))
     if not facility:
         raise HTTPException(404, "Decoration not found")
     return facility
+
+
+@router.put("/decorations/{decoration_id}/image")
+async def update_decoration_image(
+    decoration_id: int,
+    image: Union[UploadFile, str, None] = File(...),
+    db_session: Session = Depends(db.get_db)
+):
+
+    
+    return await facility_curd.update_facility_image(db_session, 3, decoration_id, image=image)
+
 
 @router.delete("/decorations/{decoration_id}")
-def delete_decoration(decoration_id: int, db: Session = Depends(db.get_db)):
-    facility = crud.delete_facility(db, 3, decoration_id)
+def delete_decoration(decoration_id: int, db_session: Session = Depends(db.get_db)):
+    facility = facility_curd.delete_facility(db_session, 3, decoration_id)
     if not facility:
         raise HTTPException(404, "Decoration not found")
     return {"message": "Decoration deleted successfully"}
@@ -231,26 +285,46 @@ def delete_decoration(decoration_id: int, db: Session = Depends(db.get_db)):
 
 # ========== SNACKS ==========
 @router.post("/snacks", response_model=SnackResponse)
-def create_snack(data: SnackBase, db: Session = Depends(db.get_db)):
-    return crud.create_facility(db, 4, data.dict())
+def create_snack(data: SnackBase, db_session: Session = Depends(db.get_db)):
+    return facility_curd.create_facility(db_session, 4, data.dict())
 
-@router.get("/snacks/{snack_id}", response_model=SnackResponse)
-def get_snack(snack_id: int, db: Session = Depends(db.get_db)):
-    facility = crud.get_facility_by_id(db, 4, snack_id)
+
+@router.get("/snacks", response_model=list)
+def get_all_snacks(db_session: Session = Depends(db.get_db)):
+    return facility_curd.get_all_facilities(db_session, 4)
+
+
+@router.get("/snacks/{snack_id}", response_model=dict)
+def get_snack(snack_id: int, db_session: Session = Depends(db.get_db)):
+    facility = facility_curd.get_facility_by_id(db_session, 4, snack_id)
     if not facility:
         raise HTTPException(404, "Snack not found")
     return facility
 
-@router.put("/snacks/{snack_id}", response_model=SnackResponse)
-def update_snack(snack_id: int, data: SnackUpdate, db: Session = Depends(db.get_db)):
-    facility = crud.update_facility(db, 4, snack_id, data.dict(exclude_unset=True))
+
+@router.put("/snacks/{snack_id}", response_model=dict)
+def update_snack(snack_id: int, data: SnackUpdate, db_session: Session = Depends(db.get_db)):
+    facility = facility_curd.update_facility(db_session, 4, snack_id, data.dict(exclude_unset=True))
     if not facility:
         raise HTTPException(404, "Snack not found")
     return facility
+
+
+@router.put("/snacks/{snack_id}/image")
+async def update_snack_image(
+    snack_id: int,
+    image: Union[UploadFile, str, None] = File(...),
+    db_session: Session = Depends(db.get_db)
+):
+    """Update snack image"""
+
+    
+    return await facility_curd.update_facility_image(db_session, 4, snack_id, image=image)
+
 
 @router.delete("/snacks/{snack_id}")
-def delete_snack(snack_id: int, db: Session = Depends(db.get_db)):
-    facility = crud.delete_facility(db, 4, snack_id)
+def delete_snack(snack_id: int, db_session: Session = Depends(db.get_db)):
+    facility = facility_curd.delete_facility(db_session, 4, snack_id)
     if not facility:
         raise HTTPException(404, "Snack not found")
     return {"message": "Snack deleted successfully"}
