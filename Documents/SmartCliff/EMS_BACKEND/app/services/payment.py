@@ -1,6 +1,6 @@
 from datetime import datetime, date, timezone
 
-from fastapi import Depends
+from fastapi import BackgroundTasks, Depends
 from pytest import Session
 from sqlalchemy import and_, func, or_
 
@@ -11,7 +11,8 @@ from app.models.events import Event
 from app.models.refund import Refund, RefundStatusHistory
 from app.models.role import Role
 from app.models.user import User
-from app.utils.common import create_error, format_ist, get_rows, insert_data, insert_data_flush, update_data
+from app.schemas.event import CancelMailSchema
+from app.utils.common import create_error, format_ist, get_row, get_rows, insert_data, insert_data_flush, send_cancel_email, update_data
 from app.models.payment import Payment as PaymentModel, PaymentStatusHistory
 class Payment:
     
@@ -32,13 +33,16 @@ class Payment:
         refund_amount = payment_amount * refund_percent
         return refund_amount
     
-    def refund_to_booked_audience(self,event_id:int, reason: str,db: Session = Depends(db.get_db)):
+    async def refund_to_booked_audience(self,event_id:int, reason: str,db: Session, background_tasks: BackgroundTasks):
+        
         bookings = get_rows(db, Bookings, event_id = event_id, status = BookingStatus.BOOKED)
         if not bookings: 
             return
-        bookings_ids = [(booking.id, booking.payment_id, booking.total_amount) for booking in bookings]
         
-        for (bid, pid, amount) in bookings_ids:
+        event_data = get_row(db, Event, id = event_id)
+        bookings_ids = [(booking.id, booking.payment_id, booking.user_id ,booking.total_amount) for booking in bookings]
+        
+        for (bid, pid, uid, amount) in bookings_ids:
             
             update_data(db, Bookings, Bookings.id == bid, status = BookingStatus.CANCELLED)
             update_data(db, PaymentModel, PaymentModel.id == pid, status = PaymentStatus.REFUND_INITIATED)
@@ -61,7 +65,22 @@ class Payment:
             RefundStatusHistory,
             refund_id = refund_data.id
         )
-    
+        
+            user_data = get_row(db, User, id = uid)
+            
+            mail_data = CancelMailSchema(
+                name= user_data.name,
+                email=user_data.email,
+                event_name=event_data.name,
+                event_date=event_data.event_date,
+                refund_amount=refund_data.refund_amount,
+                refund_days=3,
+                refund_status_url=f"http://127.0.0.1:8000/refund_status/{refund_data.id}"
+            )
+            
+            await send_cancel_email(background_tasks, mail_data)
+            
+        
     
     def get_all_payments(
         self,

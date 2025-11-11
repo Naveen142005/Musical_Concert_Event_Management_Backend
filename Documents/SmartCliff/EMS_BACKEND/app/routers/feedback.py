@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import APIRouter, Form, HTTPException, Depends, Query, Request
+from fastapi import APIRouter, BackgroundTasks, Form, HTTPException, Depends, Query, Request
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
@@ -15,14 +15,14 @@ router = APIRouter()
 templates = Jinja2Templates(directory="templates") 
 
 @router.post("/send-feedback")
-async def send_feedback_test(id: int,  user_id: int, db: Session = Depends(db.get_db)):
+async def send_feedback_test(id: int,  user_id: int, background_tasks: BackgroundTasks, db: Session = Depends(db.get_db)):
     """
                 Id can be either Event id or Booking Id\n
                 Event id -> To send feedback link to organizer\n
                 Booking id -> To send feedback link to audience
     """
     try:
-        result = await feedback_service.send_feedback(id, user_id, db)
+        result = await feedback_service.send_feedback(id, user_id, db, background_tasks)
         return result
     except HTTPException as he:
         raise he
@@ -60,7 +60,8 @@ async def submit_feedback(token: str = Form(...), feedback_rating: int = Form(..
 async def get_all_feedback(
     db: Session = Depends(db.get_db),
     rating: Optional[int] = Query(None, description="Filter by feedback rating"),
-    status: Optional[str] = Query(None, description="Filter by feedback status ('submitted', 'read')")
+    status: Optional[str] = Query(None, description="Filter by feedback status ('submitted', 'read')"),
+    current_user: dict = Depends(role_requires("Admin"))
 ):
     return feedback_service.get_all_feedback(db=db, rating=rating, status=status)
 
@@ -68,14 +69,14 @@ async def get_all_feedback(
 # UPDATE feedback status to read
 # ---------------------------
 @router.put("/{feedback_id}/read")
-async def mark_feedback_read(feedback_id: int, db: Session = Depends(db.get_db)):
+async def mark_feedback_read(feedback_id: int, db: Session = Depends(db.get_db), current_user: dict = Depends(role_requires("Admin"))):
     return feedback_service.mark_feedback_read(db=db, feedback_id=feedback_id)
 
 # ---------------------------
 # DELETE feedback
 # ---------------------------
 @router.delete("/{feedback_id}")
-async def delete_feedback(feedback_id: int, db: Session = Depends(db.get_db)):
+async def delete_feedback(feedback_id: int, db: Session = Depends(db.get_db), current_user: dict = Depends(role_requires("Admin"))):
     return feedback_service.delete_feedback(db=db, feedback_id=feedback_id)
 
 @router.get("/get_feedback/{event_id}")

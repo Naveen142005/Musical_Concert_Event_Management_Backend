@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from datetime import datetime
 from app.routers.websocket import notify_admins
 
-router = APIRouter(prefix="/test", tags=["Test Notifications"])
+router = APIRouter()
 
 @router.get("/create_event")
 async def test_create_event():

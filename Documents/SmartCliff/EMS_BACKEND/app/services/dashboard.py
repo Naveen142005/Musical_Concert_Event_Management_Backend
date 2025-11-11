@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, extract, and_, desc
 from datetime import datetime, timedelta
 from app.models.activity_log import ActivityLog
+from app.models.escrow import Escrow
 from app.models.user import User
 from app.models.events import Event
 from app.models.bookings import Bookings
@@ -38,6 +39,10 @@ class DashboardService:
         ).first()
         total_revenue = float(total_revenue_result[0]) if total_revenue_result[0] else 0.0
         
+        escrow = db.query(Escrow.released_amount).all()
+        escrow_amount = sum(escrow)
+        
+        total_revenue -= escrow_amount
         # Monthly revenue
         current_month = datetime.now().month
         current_year = datetime.now().year
@@ -217,133 +222,133 @@ class DashboardService:
         
         return result
 
-    def get_analytics(self, db: Session, period: str):
-        """Get analytics data"""
+    # def get_analytics(self, db: Session, period: str):
+    #     """Get analytics data"""
         
-        # Calculate date range
-        today = datetime.now().date()
-        if period == "day":
-            start_date = today - timedelta(days=1)
-        elif period == "week":
-            start_date = today - timedelta(days=7)
-        elif period == "month":
-            start_date = today - timedelta(days=30)
-        elif period == "year":
-            start_date = today - timedelta(days=365)
-        else:
-            start_date = today - timedelta(days=7)
+    #     # Calculate date range
+    #     today = datetime.now().date()
+    #     if period == "day":
+    #         start_date = today - timedelta(days=1)
+    #     elif period == "week":
+    #         start_date = today - timedelta(days=7)
+    #     elif period == "month":
+    #         start_date = today - timedelta(days=30)
+    #     elif period == "year":
+    #         start_date = today - timedelta(days=365)
+    #     else:
+    #         start_date = today - timedelta(days=7)
         
-        # Revenue Chart
-        revenue_data = db.query(
-            func.date(Payment.created_at).label('date'),
-            func.sum(Payment.payment_amount).label('revenue')
-        ).filter(
-            and_(
-                Payment.status == PaymentStatus.COMPLETED,
-                Payment.created_at >= start_date
-            )
-        ).group_by(func.date(Payment.created_at)).all()
+    #     # Revenue Chart
+    #     revenue_data = db.query(
+    #         func.date(Payment.created_at).label('date'),
+    #         func.sum(Payment.payment_amount).label('revenue')
+    #     ).filter(
+    #         and_(
+    #             Payment.status == PaymentStatus.COMPLETED,
+    #             Payment.created_at >= start_date
+    #         )
+    #     ).group_by(func.date(Payment.created_at)).all()
         
-        revenue_chart = []
-        for r in revenue_data:
-            revenue_chart.append({
-                "date": str(r.date),
-                "value": float(r.revenue) if r.revenue else 0.0
-            })
+    #     revenue_chart = []
+    #     for r in revenue_data:
+    #         revenue_chart.append({
+    #             "date": str(r.date),
+    #             "value": float(r.revenue) if r.revenue else 0.0
+    #         })
         
-        # Bookings Chart
-        bookings_data = db.query(
-            func.date(Bookings.created_at).label('date'),
-            func.count(Bookings.id).label('bookings')
-        ).filter(Bookings.created_at >= start_date)\
-         .group_by(func.date(Bookings.created_at)).all()
+    #     # Bookings Chart
+    #     bookings_data = db.query(
+    #         func.date(Bookings.created_at).label('date'),
+    #         func.count(Bookings.id).label('bookings')
+    #     ).filter(Bookings.created_at >= start_date)\
+    #      .group_by(func.date(Bookings.created_at)).all()
         
-        bookings_chart = []
-        for b in bookings_data:
-            bookings_chart.append({
-                "date": str(b.date),
-                "value": float(b.bookings)
-            })
+    #     bookings_chart = []
+    #     for b in bookings_data:
+    #         bookings_chart.append({
+    #             "date": str(b.date),
+    #             "value": float(b.bookings)
+    #         })
         
-        # Ticket Sales Chart
-        ticket_sales_data = db.query(
-            func.date(Bookings.created_at).label('date'),
-            func.sum(Bookings.total_tickets).label('tickets')
-        ).filter(Bookings.created_at >= start_date)\
-         .group_by(func.date(Bookings.created_at)).all()
+    #     # Ticket Sales Chart
+    #     ticket_sales_data = db.query(
+    #         func.date(Bookings.created_at).label('date'),
+    #         func.sum(Bookings.total_tickets).label('tickets')
+    #     ).filter(Bookings.created_at >= start_date)\
+    #      .group_by(func.date(Bookings.created_at)).all()
         
-        ticket_sales_chart = []
-        for t in ticket_sales_data:
-            ticket_sales_chart.append({
-                "date": str(t.date),
-                "value": float(t.tickets) if t.tickets else 0.0
-            })
+    #     ticket_sales_chart = []
+    #     for t in ticket_sales_data:
+    #         ticket_sales_chart.append({
+    #             "date": str(t.date),
+    #             "value": float(t.tickets) if t.tickets else 0.0
+    #         })
         
-        # User Registrations
-        user_reg_data = db.query(
-            func.date(User.created_at).label('date'),
-            func.count(User.id).label('new_users')
-        ).filter(User.created_at >= start_date)\
-         .group_by(func.date(User.created_at)).all()
+    #     # User Registrations
+    #     user_reg_data = db.query(
+    #         func.date(User.created_at).label('date'),
+    #         func.count(User.id).label('new_users')
+    #     ).filter(User.created_at >= start_date)\
+    #      .group_by(func.date(User.created_at)).all()
         
-        user_registrations = []
-        for u in user_reg_data:
-            user_registrations.append({
-                "date": str(u.date),
-                "value": float(u.new_users)
-            })
+    #     user_registrations = []
+    #     for u in user_reg_data:
+    #         user_registrations.append({
+    #             "date": str(u.date),
+    #             "value": float(u.new_users)
+    #         })
         
-        # Event Distribution
-        event_distribution = []
+    #     # Event Distribution
+    #     event_distribution = []
         
-        # Payment Methods
-        payment_method_data = db.query(
-            Payment.payment_mode,
-            func.count(Payment.id).label('count')
-        ).filter(Payment.status == PaymentStatus.COMPLETED)\
-         .group_by(Payment.payment_mode).all()
+    #     # Payment Methods
+    #     payment_method_data = db.query(
+    #         Payment.payment_mode,
+    #         func.count(Payment.id).label('count')
+    #     ).filter(Payment.status == PaymentStatus.COMPLETED)\
+    #      .group_by(Payment.payment_mode).all()
         
-        total_payments = sum([p.count for p in payment_method_data])
-        payment_methods = []
-        for p in payment_method_data:
-            payment_methods.append({
-                "method": p.payment_mode if p.payment_mode else "unknown",
-                "percentage": float((p.count / total_payments * 100) if total_payments > 0 else 0)
-            })
+    #     total_payments = sum([p.count for p in payment_method_data])
+    #     payment_methods = []
+    #     for p in payment_method_data:
+    #         payment_methods.append({
+    #             "method": p.payment_mode if p.payment_mode else "unknown",
+    #             "percentage": float((p.count / total_payments * 100) if total_payments > 0 else 0)
+    #         })
         
-        # Top Selling Events
-        top_events = db.query(
-            Event.id,
-            Event.name,
-            func.sum(Tickets.booked_ticket).label('tickets_sold'),
-            func.sum(Bookings.total_amount).label('revenue')
-        ).join(Tickets, Tickets.event_id == Event.id)\
-         .join(Bookings, Bookings.event_id == Event.id)\
-         .group_by(Event.id, Event.name)\
-         .order_by(desc('tickets_sold'))\
-         .limit(10).all()
+    #     # Top Selling Events
+    #     top_events = db.query(
+    #         Event.id,
+    #         Event.name,
+    #         func.sum(Tickets.booked_ticket).label('tickets_sold'),
+    #         func.sum(Bookings.total_amount).label('revenue')
+    #     ).join(Tickets, Tickets.event_id == Event.id)\
+    #      .join(Bookings, Bookings.event_id == Event.id)\
+    #      .group_by(Event.id, Event.name)\
+    #      .order_by(desc('tickets_sold'))\
+    #      .limit(10).all()
         
-        top_selling_events = []
-        for e in top_events:
-            top_selling_events.append({
-                "event_id": e.id,
-                "event_name": e.name,
-                "tickets_sold": int(e.tickets_sold) if e.tickets_sold else 0,
-                "revenue": float(e.revenue) if e.revenue else 0.0
-            })
+    #     top_selling_events = []
+    #     for e in top_events:
+    #         top_selling_events.append({
+    #             "event_id": e.id,
+    #             "event_name": e.name,
+    #             "tickets_sold": int(e.tickets_sold) if e.tickets_sold else 0,
+    #             "revenue": float(e.revenue) if e.revenue else 0.0
+    #         })
         
-        return {
-            "period": period,
-            "start_date": str(start_date),
-            "end_date": str(today),
-            "revenue_chart": revenue_chart,
-            "bookings_chart": bookings_chart,
-            "ticket_sales_chart": ticket_sales_chart,
-            "user_registrations": user_registrations,
-            "event_distribution": event_distribution,
-            "payment_methods": payment_methods,
-            "top_selling_events": top_selling_events
-        }
+    #     return {
+    #         "period": period,
+    #         "start_date": str(start_date),
+    #         "end_date": str(today),
+    #         "revenue_chart": revenue_chart,
+    #         "bookings_chart": bookings_chart,
+    #         "ticket_sales_chart": ticket_sales_chart,
+    #         "user_registrations": user_registrations,
+    #         "event_distribution": event_distribution,
+    #         "payment_methods": payment_methods,
+    #         "top_selling_events": top_selling_events
+    #     }
 
 
 dashboard_service = DashboardService()

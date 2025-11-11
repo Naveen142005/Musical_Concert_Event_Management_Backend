@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator, ValidationInfo, model_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, ValidationInfo, model_validator
 from datetime import date, datetime, timedelta
 from typing import Literal, Optional, List
 from app.models.enum import EventStatus
@@ -176,3 +176,22 @@ class RescheduleEventRequest(BaseModel):
     excepted_date: date
     ticket_opening_date: date | None = None
     slot: Literal["Morning", "Afternoon", "Night"] = Field(..., title="Slot")
+
+
+class CancelMailSchema(BaseModel):
+    name: str
+    email: EmailStr
+    event_name: str
+    event_date: date
+    refund_amount: int
+    refund_days: int
+    refund_status_url: str
+
+class RescheduleMailSchema(BaseModel):
+    name: str
+    email: EmailStr
+    event_name: str
+    old_date: date
+    new_date: date
+    cancel_before: date
+    amount : int

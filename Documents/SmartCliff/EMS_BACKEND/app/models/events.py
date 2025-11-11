@@ -1,4 +1,4 @@
-from sqlalchemy import DateTime, Enum as SqlEnum
+from sqlalchemy import CheckConstraint, DateTime, Enum as SqlEnum, UniqueConstraint
 
 import uuid
 from datetime import datetime, date
@@ -10,6 +10,13 @@ from .enum import EventStatus
 
 class Event(Base):
     __tablename__ = "events"
+    __table_args__ = (
+        # Add check constraint example: event_date must be today or later
+        CheckConstraint('event_date >= CURRENT_DATE', name='check_event_date_present_or_future'),
+        
+        # Add unique constraint example: user can't create two events with same name and slot on same date
+        UniqueConstraint('user_id', 'name', 'slot', 'event_date', name='uq_event_user_name_slot_date'),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
@@ -38,7 +45,7 @@ class Event(Base):
     facilities = relationship("FacilitiesSelected", back_populates="events")
     tickets = relationship('Tickets', back_populates='events')
     bookings = relationship("Bookings", back_populates="event")
- 
+    escrow = relationship("Escrow", back_populates="event", uselist=False)
 
 
 class EventStatusHistory(Base):

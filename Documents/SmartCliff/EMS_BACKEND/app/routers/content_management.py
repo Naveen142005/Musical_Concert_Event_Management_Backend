@@ -1,5 +1,8 @@
-from fastapi import APIRouter, HTTPException, File, Form, UploadFile, status
-from typing import Optional, Union
+from bson import ObjectId
+from fastapi import APIRouter, Body, Depends, HTTPException, File, Form, UploadFile, status
+from typing import Dict, Optional, Union
+from app.auth.auth_utils import role_requires
+from app.schemas.termsandcontidion import TermsAndConditions
 from app.services.content import content_service
 from app.schemas.content import AboutUsResponse, BandsResponse, FAQResponse, FooterResponse, HeroSectionResponse, VenueCarouselResponse
 from fastapi.datastructures import UploadFile as StarletteUploadFile
@@ -9,7 +12,7 @@ from app.utils.common import raise_exception
 router = APIRouter()
 
 @router.get("/hero", response_model=HeroSectionResponse, status_code=status.HTTP_200_OK)
-async def get_hero_content():
+async def get_hero_content(current_user: dict = Depends(role_requires("Admin"))):
     """Public endpoint to fetch current hero section content"""
     hero_content = await content_service.get_hero_content()
     
@@ -31,7 +34,8 @@ async def update_hero_content(
     satisfied_clients: Optional[str] = Form(None),
     customer_rating: Optional[str] = Form(None),
     tickets_sold: Optional[str] = Form(None),
-    image: Union[UploadFile, str, None] = File(None) 
+    image: Union[UploadFile, str, None] = File(None) ,
+    current_user: dict = Depends(role_requires("Admin"))
 ):
     
     
@@ -43,7 +47,7 @@ async def update_hero_content(
     )
 
 @router.post("/hero/initialize", status_code=status.HTTP_201_CREATED)
-async def initialize_hero_section():
+async def initialize_hero_section(current_user: dict = Depends(role_requires("Admin"))):
     """Admin endpoint to initialize hero section with default content"""
     initial_data = {
         "section": "hero_section",
@@ -67,7 +71,7 @@ async def initialize_hero_section():
 # ==================== VENUE CAROUSEL ROUTES ====================
 
 @router.get("/venue-carousel", response_model=VenueCarouselResponse, status_code=status.HTTP_200_OK)
-async def get_venue_carousel():
+async def get_venue_carousel(current_user: dict = Depends(role_requires("Admin"))):
     """Public endpoint to fetch venue carousel slides"""
     carousel = await content_service.get_venue_carousel()
     
@@ -84,7 +88,8 @@ async def add_venue_slide(
     title: str = Form(...),
     description: str = Form(...),
     cta_text: str = Form(...),
-    image: Union[UploadFile, str, None] = File(...)
+    image: Union[UploadFile, str, None] = File(...),
+    current_user: dict = Depends(role_requires("Admin"))
 ):
     """Admin endpoint to add a new venue slide"""
     
@@ -98,7 +103,8 @@ async def update_venue_slide(
     title: Optional[str] = Form(None),
     description: Optional[str] = Form(None),
     cta_text: Optional[str] = Form(None),
-    image: Union[UploadFile, str, None] = File(None)
+    image: Union[UploadFile, str, None] = File(None),
+    current_user: dict = Depends(role_requires("Admin"))
 ):
     """Admin endpoint to update a venue slide"""
     
@@ -113,7 +119,7 @@ async def delete_venue_slide(slide_index: int):
     return {"message": "Slide deleted successfully", "data": result}
 
 @router.post("/venue-carousel/initialize", status_code=status.HTTP_201_CREATED)
-async def initialize_venue_carousel():
+async def initialize_venue_carousel(current_user: dict = Depends(role_requires("Admin"))):
     """Admin endpoint to initialize venue carousel with default slides"""
     initial_data = {
         "section": "venue_carousel",
@@ -146,7 +152,7 @@ async def initialize_venue_carousel():
 # ==================== BANDS SECTION ROUTES ====================
 
 @router.get("/bands", response_model=BandsResponse, status_code=status.HTTP_200_OK)
-async def get_bands_section():
+async def get_bands_section(current_user: dict = Depends(role_requires("Admin"))):
     """Public endpoint to fetch bands section"""
     bands_section = await content_service.get_bands_section()
     
@@ -161,7 +167,8 @@ async def get_bands_section():
 @router.put("/bands/header", status_code=status.HTTP_200_OK)
 async def update_bands_header(
     heading: Optional[str] = Form(None),
-    subheading: Optional[str] = Form(None)
+    subheading: Optional[str] = Form(None),
+    current_user: dict = Depends(role_requires("Admin"))
 ):
     """Admin endpoint to update bands section heading and subheading"""
     result = await content_service.update_bands_section_header(heading, subheading)
@@ -172,7 +179,8 @@ async def add_band(
     title: str = Form(...),
     description: str = Form(...),
     cta_text: str = Form(...),
-    image: Union[UploadFile, str, None] = File(None)
+    image: Union[UploadFile, str, None] = File(None),
+    current_user: dict = Depends(role_requires("Admin"))
 ):
     """Admin endpoint to add a new band"""
     
@@ -186,7 +194,8 @@ async def update_band(
     title: Optional[str] = Form(None),
     description: Optional[str] = Form(None),
     cta_text: Optional[str] = Form(None),
-    image: Union[UploadFile, str, None] = File(None)
+    image: Union[UploadFile, str, None] = File(None),
+    current_user: dict = Depends(role_requires("Admin"))
 ):
     """Admin endpoint to update a band"""
     
@@ -201,7 +210,7 @@ async def delete_band(band_index: int):
     return {"message": "Band deleted successfully", "data": result}
 
 @router.post("/bands/initialize", status_code=status.HTTP_201_CREATED)
-async def initialize_bands_section():
+async def initialize_bands_section(current_user: dict = Depends(role_requires("Admin"))):
     """Admin endpoint to initialize bands section with default content"""
     initial_data = {
         "section": "bands_section",
@@ -234,7 +243,7 @@ async def initialize_bands_section():
 # ==================== FAQ SECTION ROUTES ====================
 
 @router.get("/faq", response_model=FAQResponse, status_code=status.HTTP_200_OK)
-async def get_faq_section():
+async def get_faq_section(current_user: dict = Depends(role_requires("Admin"))):
     """Public endpoint to fetch FAQ section"""
     faq_section = await content_service.get_faq_section()
     
@@ -249,7 +258,8 @@ async def get_faq_section():
 @router.put("/faq/header", status_code=status.HTTP_200_OK)
 async def update_faq_header(
     heading: Optional[str] = Form(None),
-    subheading: Optional[str] = Form(None)
+    subheading: Optional[str] = Form(None),
+    current_user: dict = Depends(role_requires("Admin"))
 ):
     """Admin endpoint to update FAQ section header"""
     result = await content_service.update_faq_header(heading, subheading)
@@ -258,7 +268,8 @@ async def update_faq_header(
 @router.post("/faq/item", status_code=status.HTTP_201_CREATED)
 async def add_faq(
     question: str = Form(...),
-    answer: str = Form(...)
+    answer: str = Form(...),
+    current_user: dict = Depends(role_requires("Admin"))
 ):
     """Admin endpoint to add new FAQ"""
     result = await content_service.add_faq(question, answer)
@@ -268,7 +279,8 @@ async def add_faq(
 async def update_faq(
     faq_index: int,
     question: Optional[str] = Form(None),
-    answer: Optional[str] = Form(None)
+    answer: Optional[str] = Form(None),
+    current_user: dict = Depends(role_requires("Admin"))
 ):
     """Admin endpoint to update FAQ"""
     result = await content_service.update_faq(faq_index, question, answer)
@@ -281,7 +293,7 @@ async def delete_faq(faq_index: int):
     return {"message": "FAQ deleted successfully", "data": result}
 
 @router.post("/faq/initialize", status_code=status.HTTP_201_CREATED)
-async def initialize_faq_section():
+async def initialize_faq_section(current_user: dict = Depends(role_requires("Admin"))):
     """Admin endpoint to initialize FAQ section"""
     initial_data = {
         "section": "faq_section",
@@ -329,7 +341,7 @@ async def initialize_faq_section():
 # ==================== ABOUT US SECTION ROUTES ====================
 
 @router.get("/about-us", response_model=AboutUsResponse, status_code=status.HTTP_200_OK)
-async def get_about_us_section():
+async def get_about_us_section(current_user: dict = Depends(role_requires("Admin"))):
     """Public endpoint to fetch About Us section"""
     about_section = await content_service.get_about_us_section()
     
@@ -345,7 +357,8 @@ async def get_about_us_section():
 async def update_about_us_header(
     badge: Optional[str] = Form(None),
     heading: Optional[str] = Form(None),
-    description: Optional[str] = Form(None)
+    description: Optional[str] = Form(None),
+    current_user: dict = Depends(role_requires("Admin"))
 ):
     """Admin endpoint to update About Us header"""
     result = await content_service.update_about_us_header(badge, heading, description)
@@ -353,7 +366,8 @@ async def update_about_us_header(
 
 @router.post("/about-us/gallery", status_code=status.HTTP_201_CREATED)
 async def add_gallery_image(
-    image: Union[UploadFile, str, None] = File(...)
+    image: Union[UploadFile, str, None] = File(...),
+    current_user: dict = Depends(role_requires("Admin"))
 ):
     """Admin endpoint to add gallery image"""
    
@@ -372,7 +386,8 @@ async def delete_gallery_image(image_index: int):
 async def add_info_card(
     icon: str = Form(...),
     title: str = Form(...),
-    description: str = Form(...)
+    description: str = Form(...),
+    current_user: dict = Depends(role_requires("Admin"))
 ):
     """Admin endpoint to add info card"""
     result = await content_service.add_info_card(icon, title, description)
@@ -383,7 +398,8 @@ async def update_info_card(
     card_index: int,
     icon: Optional[str] = Form(None),
     title: Optional[str] = Form(None),
-    description: Optional[str] = Form(None)
+    description: Optional[str] = Form(None),
+    current_user: dict = Depends(role_requires("Admin"))
 ):
     """Admin endpoint to update info card"""
     result = await content_service.update_info_card(card_index, icon, title, description)
@@ -396,7 +412,7 @@ async def delete_info_card(card_index: int):
     return {"message": "Info card deleted successfully", "data": result}
 
 @router.post("/about-us/initialize", status_code=status.HTTP_201_CREATED)
-async def initialize_about_us_section():
+async def initialize_about_us_section(current_user: dict = Depends(role_requires("Admin"))):
     """Admin endpoint to initialize About Us section"""
     initial_data = {
         "section": "about_us_section",
@@ -435,7 +451,7 @@ async def initialize_about_us_section():
 # ==================== FOOTER SECTION ROUTES ====================
 
 @router.get("/footer", response_model=FooterResponse, status_code=status.HTTP_200_OK)
-async def get_footer_section():
+async def get_footer_section(current_user: dict = Depends(role_requires("Admin"))):
     """Public endpoint to fetch footer section"""
     footer = await content_service.get_footer_section()
     
@@ -452,7 +468,8 @@ async def update_footer_header(
     logo_text: Optional[str] = Form(None),
     description: Optional[str] = Form(None),
     copyright_text: Optional[str] = Form(None),
-    image: Union[UploadFile, str, None] = File(None)
+    image: Union[UploadFile, str, None] = File(None),
+    current_user: dict = Depends(role_requires("Admin"))
 ):
     """Admin endpoint to update footer header and background image"""
     
@@ -464,7 +481,8 @@ async def update_footer_header(
 async def update_contact_info(
     location: Optional[str] = Form(None),
     phone: Optional[str] = Form(None),
-    email: Optional[str] = Form(None)
+    email: Optional[str] = Form(None),
+    current_user: dict = Depends(role_requires("Admin"))
 ):
     """Admin endpoint to update contact information"""
     result = await content_service.update_contact_info(location, phone, email)
@@ -473,7 +491,8 @@ async def update_contact_info(
 @router.post("/footer/quick-link", status_code=status.HTTP_201_CREATED)
 async def add_quick_link(
     name: str = Form(...),
-    url: str = Form(...)
+    url: str = Form(...),
+    current_user: dict = Depends(role_requires("Admin"))
 ):
     """Admin endpoint to add quick link"""
     result = await content_service.add_quick_link(name, url)
@@ -483,7 +502,8 @@ async def add_quick_link(
 async def update_quick_link(
     link_index: int,
     name: Optional[str] = Form(None),
-    url: Optional[str] = Form(None)
+    url: Optional[str] = Form(None),
+    current_user: dict = Depends(role_requires("Admin"))
 ):
     """Admin endpoint to update quick link"""
     result = await content_service.update_quick_link(link_index, name, url)
@@ -498,7 +518,8 @@ async def delete_quick_link(link_index: int):
 @router.post("/footer/social-link", status_code=status.HTTP_201_CREATED)
 async def add_social_link(
     name: str = Form(...),
-    url: str = Form(...)
+    url: str = Form(...),
+    current_user: dict = Depends(role_requires("Admin"))
 ):
     """Admin endpoint to add social link"""
     result = await content_service.add_social_link(name, url)
@@ -508,7 +529,8 @@ async def add_social_link(
 async def update_social_link(
     link_index: int,
     name: Optional[str] = Form(None),
-    url: Optional[str] = Form(None)
+    url: Optional[str] = Form(None),
+    current_user: dict = Depends(role_requires("Admin"))
 ):
     """Admin endpoint to update social link"""
     result = await content_service.update_social_link(link_index, name, url)
@@ -521,7 +543,7 @@ async def delete_social_link(link_index: int):
     return {"message": "Social link deleted successfully", "data": result}
 
 @router.post("/footer/initialize", status_code=status.HTTP_201_CREATED)
-async def initialize_footer_section():
+async def initialize_footer_section(current_user: dict = Depends(role_requires("Admin"))):
     """Admin endpoint to initialize footer section"""
     initial_data = {
         "section": "footer_section",

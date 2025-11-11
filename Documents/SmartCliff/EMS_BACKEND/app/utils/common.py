@@ -1,11 +1,19 @@
 
+from sqlalchemy.orm import Session
+from app.database.connection import SessionLocal
+from app.models.activity_log import ActivityLog
+from app.models.enum import EventStatus
+from app.models.user import User
+from app.models.events import Event
 import base64
-from datetime import timedelta, timezone
+from datetime import datetime, time, timedelta, timezone
 import os
 from fastapi import HTTPException, UploadFile
 from pytest import Session
 from sqlalchemy import and_
 import yagmail
+from apscheduler.schedulers.background import BackgroundScheduler
+from app.schemas.event import CancelMailSchema, RescheduleMailSchema
 def model_dumb(model):
 
     if not model:
@@ -107,20 +115,7 @@ def decode_ids(token: str) -> tuple[int, int]:
     except Exception:
         raise ValueError("Invalid token")
 
-def send_email(to_mail: str, sub: str, html):
-        my_email = 'thigalzhieventmanagement@gmail.com'
-        my_name = 'Naveen Kumar'
-        password = 'inrl iuyk xagh amhf'
 
-        yag = yagmail.SMTP(user=my_email, password=password)
-
-        yag.send(
-            to=to_mail,
-            subject = sub,
-            contents = html
-        )
-        
-        return {"message": "Email sent"}
 
 import os
 
@@ -179,11 +174,21 @@ def raise_exception (status_code, detail: str) -> HTTPException:
     raise HTTPException(status_code=status_code, detail=detail)
 
 
-from sqlalchemy.orm import Session
-from app.models.activity_log import ActivityLog
-from app.models.user import User
-from app.models.events import Event
 
+def get_url(url: str):
+    # Normalize slashes
+    image = url.replace("\\", "/")
+
+    # Get absolute path to the project root
+    base_dir = os.path.abspath(os.path.dirname(__file__))
+    project_root = os.path.abspath(os.path.join(base_dir, "..", ".."))
+
+    # Join with project root to form full absolute path
+    abs_path = os.path.join(project_root, image.lstrip("/"))
+    abs_path = os.path.normpath(abs_path)  # normalize C:\ or / style
+
+    # Convert backslashes to forward slashes for consistency
+    return abs_path.replace("\\", "/")
 
 def log_activity(
     db: Session,
@@ -208,3 +213,107 @@ def log_activity(
     db.add(activity)
     db.commit()
     return activity
+
+
+
+import os
+from tempfile import NamedTemporaryFile
+from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
+from fastapi import  BackgroundTasks, File, Form, HTTPException, UploadFile
+from pydantic import BaseModel, EmailStr
+
+
+conf = ConnectionConfig(
+    MAIL_USERNAME="thigalzhieventmanagement@gmail.com",
+    MAIL_PASSWORD="inrl iuyk xagh amhf",
+    MAIL_FROM="thigalzhieventmanagement@gmail.com",
+    MAIL_PORT=587,
+    MAIL_SERVER="smtp.gmail.com",
+    MAIL_STARTTLS=True,    
+    MAIL_SSL_TLS=False,    
+    USE_CREDENTIALS=True
+)
+
+class EmailSchema(BaseModel):
+    email: EmailStr
+    subject: str
+    message: str
+
+async def auto_email_send(background_tasks: BackgroundTasks, email: EmailSchema):
+    message = MessageSchema(
+        subject=email.subject,
+        recipients=[email.email],
+        body=email.message,
+        subtype="html"
+    )
+    
+    fm = FastMail(conf)
+    background_tasks.add_task(fm.send_message, message)
+    return {"status": "email sent"}
+
+
+
+
+# ---- Function to Send Mail ----
+async def send_cancel_email(background_tasks: BackgroundTasks, data: CancelMailSchema):
+    message_body = f"""
+    Hi {data.name},
+
+    We regret to inform you that {data.event_name} scheduled for {data.event_date} has been cancelled.
+
+    Refund: {data.refund_amount} will be returned to your original payment method within {data.refund_days} days.
+
+    Check refund status: {data.refund_status_url}
+
+    Warmly,
+    The Event Team
+    """
+
+    message = MessageSchema(
+        subject=f"{data.event_name} — Event Cancelled & Refund Info",
+        recipients=[data.email],
+        body=message_body,
+        subtype="plain"  # you can switch to "html" if needed
+    )
+
+    fm = FastMail(conf)
+    background_tasks.add_task(fm.send_message, message)
+    return {"status": "Email sent successfully"}
+
+
+async def send_reschedule_email(background_tasks: BackgroundTasks, data: RescheduleMailSchema):
+    message_body = f"""
+    Hi {data.name},
+
+    We wanted to let you know that {data.event_name} originally scheduled for {data.old_date} 
+    has been rescheduled to {data.new_date}.
+
+    If you’re unable to attend on the new date, you can cancel your booking before {data.cancel_before}
+    to receive a **full refund of {data.amount}**.
+
+    Warmly,
+    The Event Team
+    """
+
+    message = MessageSchema(
+        subject=f"{data.event_name} — Event Rescheduled Notification",
+        recipients=[data.email],
+        body=message_body,
+        subtype="plain"
+    )
+
+    fm = FastMail(conf)
+    background_tasks.add_task(fm.send_message, message)
+    return {"status": "Reschedule email sent successfully"}
+
+
+def send_email(to_mail: str, sub: str, html, background_tasks: BackgroundTasks):
+        message = MessageSchema(
+            subject=sub,
+            recipients=[to_mail],
+            body=html,
+            subtype='html'
+        )
+        fm = FastMail(conf)
+        background_tasks.add_task(fm.send_message, message)
+        return {"message": "Email sent"}

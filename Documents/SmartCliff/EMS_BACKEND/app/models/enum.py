@@ -76,3 +76,8 @@ class FacilityStatus(str, Enum):
 class SortOrder(str, Enum):
     asc = "asc"
     desc = "desc"
+    
+class ESCROWSTATUS(str, Enum):
+    RELEASED = "released"
+    FAILED = "failed"
+    PENDING = "pending"

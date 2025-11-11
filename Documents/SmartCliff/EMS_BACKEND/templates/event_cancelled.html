@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Event Cancelled</title>
+    <style>
+      /* Basic inline-friendly styles */
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                     "Helvetica Neue", Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f6f8;
+        color: #1f2937;
+      }
+      .container {
+        max-width: 640px;
+        margin: 28px auto;
+        background: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 6px 18px rgba(17,24,39,0.06);
+      }
+      .header {
+        padding: 20px;
+        background: linear-gradient(90deg,#0ea5a4,#06b6d4);
+        color: #fff;
+      }
+      .logo {
+        font-weight: 700;
+        font-size: 20px;
+      }
+      .content {
+        padding: 24px;
+        line-height: 1.55;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0 0 8px 0;
+      }
+      p {
+        margin: 12px 0;
+      }
+      .event-card {
+        border: 1px solid #e6eef0;
+        padding: 14px;
+        border-radius: 6px;
+        background: #fbfbfd;
+        margin-top: 12px;
+      }
+      .cta {
+        display: inline-block;
+        padding: 12px 20px;
+        margin-top: 18px;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+      }
+      .btn-primary {
+        background: #0ea5a4;
+        color: #fff;
+      }
+      .btn-ghost {
+        background: transparent;
+        color: #0ea5a4;
+        border: 1px solid #0ea5a4;
+      }
+      .muted {
+        color: #6b7280;
+        font-size: 13px;
+      }
+      .footer {
+        padding: 18px 24px;
+        background: #fbfcfd;
+        color: #6b7280;
+        font-size: 13px;
+      }
+      @media (max-width:480px){
+        .container { margin: 12px; }
+        h1 { font-size: 18px; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td align="center">
+          <div class="container" role="article" aria-label="Event cancellation notice">
+            <!-- Header -->
+            <div class="header" style="text-align:left;">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div class="logo">Your Event Team</div>
+                <!-- optional small tag -->
+                <div style="margin-left:auto;font-size:13px;opacity:0.95;">Important update</div>
+              </div>
+            </div>
+
+            <!-- Body -->
+            <div class="content">
+              <h1>Hi {{name}},</h1>
+
+              <p>
+                We’re sorry to tell you that <strong>{{event_name}}</strong> scheduled for
+                <strong>{{event_date}}</strong> has been <strong>cancelled</strong>.
+              </p>
+
+              <div class="event-card" role="group" aria-label="Event details">
+                <p style="margin:0;"><strong>Event:</strong> {{event_name}}</p>
+                <p style="margin:0;"><strong>Date:</strong> {{event_date}}</p>
+                <p style="margin:0;"><strong>Booking / Order:</strong> #{{booking_id}}</p>
+              </div>
+
+              <p>
+                We understand this is disappointing. Your payment of
+                <strong>{{refund_amount}}</strong> will be refunded automatically.
+                Please allow up to <strong>{{refund_days}} days</strong> for the amount to appear in your original payment method.
+              </p>
+
+              <p class="muted">
+                (Bank/processor timelines vary — some refunds can show sooner, some may take the full {{refund_days}} days.)
+              </p>
+
+              <!-- CTA -->
+              <p>
+                <a href="{{refund_status_url}}" class="cta btn-primary" rel="noopener" target="_blank">
+                  Check refund status
+                </a>
+                <a href="{{support_url}}" class="cta btn-ghost" rel="noopener" target="_blank" style="margin-left:8px;">
+                  Contact support
+                </a>
+              </p>
+
+              <hr style="border:none;border-top:1px solid #eef2f6;margin:20px 0;" />
+
+              <p>
+                If you have questions, reply to this email or contact our support team and we’ll help right away.
+              </p>
+
+              <p style="margin-top:18px;">Warmly,<br>
+                <strong>The Event Team</strong><br>
+                <span class="muted">— From your Thigalzhi ❤️</span>
+              </p>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+                <div>
+                  <div style="font-weight:600;">Your Organization</div>
+                  <div>123, Example Street, City</div>
+                </div>
+                <div style="text-align:right;">
+                  <div><a href="{{unsubscribe_url}}" style="color:inherit;text-decoration:underline;">Unsubscribe</a></div>
+                  <div class="muted" style="margin-top:6px;">Reference ID: {{reference_id}}</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

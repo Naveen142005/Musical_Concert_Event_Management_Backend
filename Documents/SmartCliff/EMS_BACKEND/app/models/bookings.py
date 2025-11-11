@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, DateTime, Integer, String, Date, ForeignKey
+from sqlalchemy import CheckConstraint, Column, DateTime, Integer, String, Date, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Date, ForeignKey, Enum as SqlEnum
@@ -10,6 +10,10 @@ from app.database.connection import Base
 # Audience Ticket Booking
 class Bookings(Base):
     __tablename__ = "bookings"
+    __table_args__ = (
+        CheckConstraint('total_tickets > 0', name='check_total_tickets_positive'),
+        CheckConstraint('total_amount >= 0', name='check_total_amount_nonnegative'),
+    )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
@@ -30,6 +34,12 @@ class Bookings(Base):
 class BookingDetails(Base):
     __tablename__ = "booking_ticket_details"
 
+    __table_args__ = (
+        CheckConstraint('quantity > 0', name='check_quantity_positive'),
+        CheckConstraint('sub_total >= 0', name='check_sub_total_nonnegative'),
+        UniqueConstraint('booking_id', 'ticket_type', name='uq_booking_ticket_type'),
+    )
+    
     booking_details_id = Column(Integer, primary_key=True, autoincrement=True)
     booking_id = Column(Integer, ForeignKey("bookings.id"), nullable=False)
     ticket_type = Column(String, nullable=False)

@@ -1,12 +1,13 @@
 
 from datetime import date, datetime 
-from fastapi import Depends, HTTPException
+from fastapi import BackgroundTasks, Depends, HTTPException
 from fastapi.encoders import jsonable_encoder
 from pytest import Session
 from sqlalchemy import and_, null
 
 from app.dependencies import db
-from app.models.enum import FacilityStatus, PaymentMode, PaymentStatus
+from app.models.bookings import Bookings
+from app.models.enum import BookingStatus, FacilityStatus, PaymentMode, PaymentStatus
 from app.models.events import Event, EventStatusHistory
 from app.models.facilities import Bands, Decorations, Venues
 from app.models.facilities_selected import FacilitiesSelected
@@ -16,9 +17,9 @@ from app.models.refund import Refund, RefundStatusHistory
 from app.models.tickets import Tickets
 from app.models.user import User
 from app.routers.websocket import notify_admins
-from app.schemas.event import EventBase
+from app.schemas.event import EventBase, RescheduleMailSchema
 from app.services.facility import facility_service
-from app.utils.common import commit, create_error, delete_data, get_row, get_rows, insert_data, insert_data_flush, log_activity, model_dumb, update_data
+from app.utils.common import commit, create_error, delete_data, get_row, get_rows, insert_data, insert_data_flush, log_activity, model_dumb, send_reschedule_email, update_data
 from app.services.events import event_service
 from app.services.ticket import ticket_service
 from app.services.payment import payment_service
@@ -201,13 +202,17 @@ class EventCRUD:
         response["invoice_path"] = invoice_path
         return response
     
-    async def reshedule_event(self,event_id: int, user_id: int ,reshedule_date, ticket_opening_date, slot:str ,db: Session):
+    async def reshedule_event(self,event_id: int, user_id: int ,reshedule_date, ticket_opening_date, slot:str ,db: Session, background_tasks: BackgroundTasks):
         
         if event_id <= 0:
             create_error('Provide valid event Id')
             
         data:Event = get_row(db, Event, id= event_id)
+        old_date = data.event_date
         
+        if old_date == reshedule_date and data.slot == slot:
+            raise HTTPException(404, "Event can not be reshedule at same date and same slot")
+            
         if data.status != EventStatus.BOOKED:
             create_error(f'The event which is already {str(data.status)[12:].lower()} can not be reshedule')
         
@@ -226,6 +231,8 @@ class EventCRUD:
         
         if reshedule_date <= ticket_opening_date:
             create_error(f'Ticket opening date should be before the resheduling_date.')
+        if ticket_opening_date < date.today():
+            raise HTTPException(404, "Ticket opening should can't be past date")
         
         updated_data = update_data(
             db, 
@@ -267,10 +274,30 @@ class EventCRUD:
         )
         
         
+        bookings = get_rows(db, Bookings, event_id = event_id, status = BookingStatus.BOOKED)
+        if bookings: 
+            event_data = get_row(db, Event, id = event_id)
+            bookings_ids = [(booking.id, booking.payment_id, booking.user_id ,booking.total_amount) for booking in bookings]
+
+            for (bid, pid, uid, amount) in bookings_ids:
+                user_data = get_row(db, User, id = uid)
+            
+                mail_data = RescheduleMailSchema(
+                    name=user_data.name,
+                    email=user_data.email,
+                    event_name=event_data.name,
+                    old_date= old_date,
+                    new_date=reshedule_date,
+                    cancel_before=reshedule_date,
+                    amount = amount
+                )
+
+                await send_reschedule_email(background_tasks, mail_data)
+        
         
         return {"Updated_data": updated_data, "mes": "Success"}
         
-    async def cancel_event(self, event_id: int, db: Session, reason: str, user_id: int): 
+    async def cancel_event(self, event_id: int, db: Session, reason: str, user_id: int, background_tasks: BackgroundTasks): 
         if event_id <= 0:
             create_error('Provide valid event Id')
         data = get_row(db, Event, id= event_id)
@@ -295,7 +322,12 @@ class EventCRUD:
         )
         
         payment_data: Payment = get_row(db, Payment, event_id = event_id, user_id = user_id)
-        
+        past_status = payment_data.status
+        if past_status == PaymentStatus.PENDING:
+            amount = payment_data.payment_amount * 2
+        else:
+            amount = payment_data.payment_amount
+            
         payment_updated_data = update_data (
             db,
             Payment,
@@ -313,7 +345,7 @@ class EventCRUD:
         event_data = get_row(db, Event, id = event_id)
         event_date = event_data.event_date
         
-        refund_amount = payment_service.calculate_refund(payment_data.payment_amount,event_date)
+        refund_amount = payment_service.calculate_refund(amount,event_date)
         
       
         refund_data = insert_data_flush(
@@ -330,7 +362,7 @@ class EventCRUD:
             refund_id = refund_data.id,
         )
         
-        payment_service.refund_to_booked_audience(event_id, "Cancelled by the booked Organizer:" + reason,db)
+        await payment_service.refund_to_booked_audience(event_id, "Cancelled by the booked Organizer:" + reason,db, background_tasks)
         
         commit(db)
         
@@ -352,6 +384,8 @@ class EventCRUD:
             event_id=event_id,
             status="Cancelled",
         )
+        
+        
         
         
         # Should give refund to all the booked audience. (DONE)

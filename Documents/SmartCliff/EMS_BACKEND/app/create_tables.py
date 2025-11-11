@@ -11,6 +11,7 @@ from app.models.bookings import Bookings, BookingDetails
 from app.models.feedback import Feedback
 from app.models.query import Query
 from app.models.activity_log import ActivityLog
+from app.models.escrow import Escrow
 # # Drop all tables (optional reset)
 # Base.metadata.drop_all(bind=engine)
 # print("✅All tables dropped successfully!")

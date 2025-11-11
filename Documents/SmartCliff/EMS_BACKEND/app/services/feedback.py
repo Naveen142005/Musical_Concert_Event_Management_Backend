@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import HTTPException
+from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Session
 import resend
@@ -14,7 +14,7 @@ import base64
 
 
 class FeedBack:
-    async def send_feedback(self, id: int, user_id: int, db:Session):
+    async def send_feedback(self, id: int, user_id: int, db:Session, background_tasks: BackgroundTasks, f = False):
         
         role, event_name, event_date, feedback_link, receiver_email = feedback_service.get_info_for_feedback(id, db, user_id)
         
@@ -51,7 +51,25 @@ class FeedBack:
         """
         
         try:
-            send_email(receiver_email, "Event Feedback Request", html)
+           
+            if background_tasks and not f:
+                send_email(receiver_email, "Event Feedback Request", html, background_tasks)
+                
+            else:
+                import yagmail
+                my_email = 'thigalzhieventmanagement@gmail.com'
+                password = 'inrl iuyk xagh amhf'
+                
+                yag = yagmail.SMTP(user=my_email, password=password)
+                yag.send(
+                    to=receiver_email,
+                    subject="Event Feedback Request",
+                    contents=html
+                )
+                print(f"✉️ Email sent directly to {receiver_email}")
+                
+                return {"status": "Email sent successfully", "to": receiver_email}
+            
             return {"status": "Email sent successfully", "to": receiver_email}
         
         except Exception as e:
@@ -60,6 +78,8 @@ class FeedBack:
  
     def get_info_for_feedback(self, id: int, db: Session, user_id):
         # Get event and user
+        print ("--------------")
+        print (id, user_id)
         user_data: User = get_row(db, User, id=user_id)
         if not user_data:
             raise HTTPException(status_code=404, detail="User not found")

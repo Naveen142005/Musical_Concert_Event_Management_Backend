@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum as SqlEnum
+from sqlalchemy import CheckConstraint, Column, Integer, String, Float, DateTime, ForeignKey, Enum as SqlEnum
 from sqlalchemy.orm import relationship
 from app.database.connection import Base
 from app.models.enum import RefundStatus
@@ -7,7 +7,10 @@ from app.models.enum import RefundStatus
 
 class Refund(Base):
     __tablename__ = "refunds"
-    
+    __table_args__ = (
+        CheckConstraint('refund_amount >= 0', name='check_refund_amount_nonnegative'),
+    )
+
     id = Column(Integer, primary_key=True, index=True)
     payment_id = Column(Integer, ForeignKey('payments.id'), nullable=False)
     refund_reason = Column(String)

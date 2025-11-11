@@ -1,16 +1,18 @@
-from sqlalchemy import Column, Integer, String, Float, ARRAY
+from sqlalchemy import CheckConstraint, Column, Integer, String, Float, ARRAY
 from sqlalchemy.orm import relationship
 from app.database.connection import Base
 from app.models.enum import FacilityStatus
 from sqlalchemy import Enum as SqlEnum
-
 
 # ========================
 #  Venues Table
 # ========================
 class Venues(Base):
     __tablename__ = "venues"
-
+    __table_args__ = (
+        CheckConstraint("capacity >= 0", name="check_capacity_nonnegative"),
+        CheckConstraint("price >= 0", name="check_price_nonnegative"),
+    )
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     location = Column(String, nullable=False)
@@ -25,6 +27,10 @@ class Venues(Base):
 # ========================
 class Bands(Base):
     __tablename__ = "bands"
+    __table_args__ = (
+        CheckConstraint("member_count >= 0", name="check_member_count_nonnegative"),
+        CheckConstraint("price >= 0", name="check_price_nonnegative"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
@@ -40,6 +46,9 @@ class Bands(Base):
 # ========================
 class Decorations(Base):
     __tablename__ = "decorations"
+    __table_args__ = (
+        CheckConstraint("price >= 0", name="check_price_nonnegative"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
@@ -54,6 +63,9 @@ class Decorations(Base):
 # ========================
 class Snacks(Base):
     __tablename__ = "snacks"
+    __table_args__ = (
+        CheckConstraint("price >= 0", name="check_price_nonnegative"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     snacks = Column(ARRAY(String))
